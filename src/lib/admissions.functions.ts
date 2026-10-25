@@ -62,6 +62,16 @@ function toRow(d: AdmissionInput) {
 export const getAdmissionsOverview = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    // Suspended or inactive accounts keep a valid token until it expires;
+    // refuse them here so withdrawing access takes effect immediately.
+    const { data: me } = await context.supabase
+      .from("profiles")
+      .select("status")
+      .eq("id", context.userId)
+      .maybeSingle();
+    if (!me || me.status !== "active") {
+      throw new Error("Forbidden: account is not active.");
+    }
     const [admissions, teachers, exeat] = await Promise.all([
       context.supabase.from("admissions").select("*").order("created_at", { ascending: false }),
       context.supabase.from("class_teachers").select("*").order("class_name"),
