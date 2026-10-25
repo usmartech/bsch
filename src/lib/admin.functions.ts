@@ -89,8 +89,6 @@ export const runInitialSetup = createServerFn({ method: "POST" })
     return { created };
   });
 
-/** Minimum gap before a repeat reset request for the same email is recorded. */
-const RESET_REQUEST_COOLDOWN_MS = 15 * 60 * 1000;
 
 /**
  * Public: raise a password reset request. Only an admin can actually reset the
