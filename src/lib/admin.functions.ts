@@ -122,15 +122,9 @@ export const requestPasswordReset = createServerFn({ method: "POST" })
       .maybeSingle();
 
     if (existing) {
-      // Throttle: a fresh pending request already covers this account; repeats
-      // within the cooldown must not modify it (prevents queue flooding and
-      // note tampering by unauthenticated callers).
-      const age = Date.now() - new Date(existing.created_at).getTime();
-      if (age < RESET_REQUEST_COOLDOWN_MS) return { ok: true };
-      await supabaseAdmin
-        .from("password_reset_requests")
-        .update({ note, created_at: new Date().toISOString() })
-        .eq("id", existing.id);
+      // A pending request already covers this account. Unauthenticated callers
+      // can never modify it (no note or timestamp tampering); admins resolve it.
+      return { ok: true };
     } else {
       await supabaseAdmin.from("password_reset_requests").insert({ email, note });
       await supabaseAdmin.from("audit_logs").insert({
