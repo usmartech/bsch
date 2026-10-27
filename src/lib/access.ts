@@ -13,6 +13,7 @@ import {
   ClipboardList,
   FileText,
   BookOpenCheck,
+  BookOpen,
   ClipboardCheck,
   HeartHandshake,
   TrendingUp,
@@ -23,6 +24,7 @@ import {
   Archive,
   Landmark,
   Settings2,
+  Megaphone,
 } from "lucide-react";
 
 export type Role = "super_admin" | "school_manager" | "staff" | "student" | "parent";
@@ -116,6 +118,14 @@ export const MODULES: ModuleDef[] = [
     roles: ALL,
   },
   {
+    id: "publicity",
+    name: "Publicity",
+    description: "Manage public notice board, circulars, banner slideshows, articles and media gallery.",
+    icon: Megaphone,
+    category: "Operations",
+    roles: ADMINS,
+  },
+  {
     id: "admissions",
     name: "Admissions",
     description: "Applications, enrolment pipeline and placement.",
@@ -139,6 +149,22 @@ export const MODULES: ModuleDef[] = [
     icon: CalendarCheck,
     category: "Academics",
     roles: STAFF_UP,
+  },
+  {
+    id: "lessons",
+    name: "Lessons",
+    description: "Course lessons, intro video learning, downloadable content, and lesson completion quizzes.",
+    icon: BookOpen,
+    category: "Academics",
+    roles: ALL,
+  },
+  {
+    id: "assignments",
+    name: "Assignments",
+    description: "Individual and group assignments, submission tracking and late penalties.",
+    icon: FileText,
+    category: "Academics",
+    roles: ALL,
   },
   {
     id: "students",
