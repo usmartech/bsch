@@ -140,6 +140,311 @@ export type Database = {
         }
         Relationships: []
       }
+      assignment_group_members: {
+        Row: {
+          admission_id: string
+          created_at: string
+          group_id: string
+          id: string
+        }
+        Insert: {
+          admission_id: string
+          created_at?: string
+          group_id: string
+          id?: string
+        }
+        Update: {
+          admission_id?: string
+          created_at?: string
+          group_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignment_group_members_admission_id_fkey"
+            columns: ["admission_id"]
+            isOneToOne: false
+            referencedRelation: "admissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignment_group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "assignment_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assignment_groups: {
+        Row: {
+          assignment_id: string
+          created_at: string
+          group_name: string
+          id: string
+        }
+        Insert: {
+          assignment_id: string
+          created_at?: string
+          group_name: string
+          id?: string
+        }
+        Update: {
+          assignment_id?: string
+          created_at?: string
+          group_name?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignment_groups_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assignment_regrade_requests: {
+        Row: {
+          created_at: string
+          id: string
+          reason: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          student_id: string
+          submission_id: string
+          teacher_response: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reason: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          student_id: string
+          submission_id: string
+          teacher_response?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reason?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          student_id?: string
+          submission_id?: string
+          teacher_response?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignment_regrade_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignment_regrade_requests_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignment_regrade_requests_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "assignment_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assignment_submissions: {
+        Row: {
+          admission_id: string | null
+          assignment_id: string
+          attachment_url: string
+          created_at: string
+          feedback: string
+          final_score: number | null
+          graded_at: string | null
+          graded_by: string | null
+          group_id: string | null
+          id: string
+          is_late: boolean
+          late_hours: number
+          late_penalty_applied: number | null
+          raw_score: number | null
+          submission_text: string
+          submitted_at: string
+          submitted_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          admission_id?: string | null
+          assignment_id: string
+          attachment_url?: string
+          created_at?: string
+          feedback?: string
+          final_score?: number | null
+          graded_at?: string | null
+          graded_by?: string | null
+          group_id?: string | null
+          id?: string
+          is_late?: boolean
+          late_hours?: number
+          late_penalty_applied?: number | null
+          raw_score?: number | null
+          submission_text?: string
+          submitted_at?: string
+          submitted_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          admission_id?: string | null
+          assignment_id?: string
+          attachment_url?: string
+          created_at?: string
+          feedback?: string
+          final_score?: number | null
+          graded_at?: string | null
+          graded_by?: string | null
+          group_id?: string | null
+          id?: string
+          is_late?: boolean
+          late_hours?: number
+          late_penalty_applied?: number | null
+          raw_score?: number | null
+          submission_text?: string
+          submitted_at?: string
+          submitted_by?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignment_submissions_admission_id_fkey"
+            columns: ["admission_id"]
+            isOneToOne: false
+            referencedRelation: "admissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignment_submissions_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignment_submissions_graded_by_fkey"
+            columns: ["graded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignment_submissions_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "assignment_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignment_submissions_submitted_by_fkey"
+            columns: ["submitted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assignments: {
+        Row: {
+          allow_late: boolean
+          assessment_type: string
+          class_name: string
+          created_at: string
+          created_by: string | null
+          cutoff_date: string | null
+          description: string
+          due_date: string
+          education_level: string
+          id: string
+          late_grace_hours: number
+          late_penalty_type: string
+          late_penalty_value: number
+          max_late_penalty_percent: number
+          max_score: number
+          subject: string
+          submission_mode: string
+          submission_type: string
+          term: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          allow_late?: boolean
+          assessment_type?: string
+          class_name: string
+          created_at?: string
+          created_by?: string | null
+          cutoff_date?: string | null
+          description?: string
+          due_date: string
+          education_level?: string
+          id?: string
+          late_grace_hours?: number
+          late_penalty_type?: string
+          late_penalty_value?: number
+          max_late_penalty_percent?: number
+          max_score?: number
+          subject: string
+          submission_mode?: string
+          submission_type?: string
+          term?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          allow_late?: boolean
+          assessment_type?: string
+          class_name?: string
+          created_at?: string
+          created_by?: string | null
+          cutoff_date?: string | null
+          description?: string
+          due_date?: string
+          education_level?: string
+          id?: string
+          late_grace_hours?: number
+          late_penalty_type?: string
+          late_penalty_value?: number
+          max_late_penalty_percent?: number
+          max_score?: number
+          subject?: string
+          submission_mode?: string
+          submission_type?: string
+          term?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -252,6 +557,305 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      exam_answers: {
+        Row: {
+          answer_text: string
+          created_at: string
+          feedback: string
+          id: string
+          is_correct: boolean | null
+          points_awarded: number
+          question_id: string
+          submission_id: string
+          updated_at: string
+        }
+        Insert: {
+          answer_text?: string
+          created_at?: string
+          feedback?: string
+          id?: string
+          is_correct?: boolean | null
+          points_awarded?: number
+          question_id: string
+          submission_id: string
+          updated_at?: string
+        }
+        Update: {
+          answer_text?: string
+          created_at?: string
+          feedback?: string
+          id?: string
+          is_correct?: boolean | null
+          points_awarded?: number
+          question_id?: string
+          submission_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "exam_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exam_answers_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "exam_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exam_questions: {
+        Row: {
+          correct_answer: string
+          created_at: string
+          exam_id: string
+          explanation: string
+          id: string
+          options: Json
+          order_index: number
+          points: number
+          question_text: string
+          question_type: string
+          updated_at: string
+        }
+        Insert: {
+          correct_answer?: string
+          created_at?: string
+          exam_id: string
+          explanation?: string
+          id?: string
+          options?: Json
+          order_index?: number
+          points?: number
+          question_text: string
+          question_type?: string
+          updated_at?: string
+        }
+        Update: {
+          correct_answer?: string
+          created_at?: string
+          exam_id?: string
+          explanation?: string
+          id?: string
+          options?: Json
+          order_index?: number
+          points?: number
+          question_text?: string
+          question_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_questions_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams_quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exam_submissions: {
+        Row: {
+          admission_id: string | null
+          created_at: string
+          exam_id: string
+          feedback: string
+          id: string
+          started_at: string
+          status: string
+          student_id: string | null
+          submitted_at: string | null
+          total_score: number
+          updated_at: string
+        }
+        Insert: {
+          admission_id?: string | null
+          created_at?: string
+          exam_id: string
+          feedback?: string
+          id?: string
+          started_at?: string
+          status?: string
+          student_id?: string | null
+          submitted_at?: string | null
+          total_score?: number
+          updated_at?: string
+        }
+        Update: {
+          admission_id?: string | null
+          created_at?: string
+          exam_id?: string
+          feedback?: string
+          id?: string
+          started_at?: string
+          status?: string
+          student_id?: string | null
+          submitted_at?: string | null
+          total_score?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_submissions_admission_id_fkey"
+            columns: ["admission_id"]
+            isOneToOne: false
+            referencedRelation: "admissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exam_submissions_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams_quizzes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exam_submissions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exams_quizzes: {
+        Row: {
+          class_name: string
+          created_at: string
+          created_by: string | null
+          description: string
+          duration_minutes: number
+          end_time: string | null
+          exam_type: string
+          id: string
+          pass_mark: number
+          show_results_immediately: boolean
+          shuffle_questions: boolean
+          start_time: string | null
+          status: string
+          subject: string
+          term: string
+          title: string
+          total_marks: number
+          updated_at: string
+        }
+        Insert: {
+          class_name?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          duration_minutes?: number
+          end_time?: string | null
+          exam_type?: string
+          id?: string
+          pass_mark?: number
+          show_results_immediately?: boolean
+          shuffle_questions?: boolean
+          start_time?: string | null
+          status?: string
+          subject: string
+          term?: string
+          title: string
+          total_marks?: number
+          updated_at?: string
+        }
+        Update: {
+          class_name?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          duration_minutes?: number
+          end_time?: string | null
+          exam_type?: string
+          id?: string
+          pass_mark?: number
+          show_results_immediately?: boolean
+          shuffle_questions?: boolean
+          start_time?: string | null
+          status?: string
+          subject?: string
+          term?: string
+          title?: string
+          total_marks?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exams_quizzes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      finance_billing_runs: {
+        Row: {
+          academic_year: string
+          created_at: string
+          created_by: string | null
+          id: string
+          metadata: Json | null
+          notes: string | null
+          period: string
+          school_id: string | null
+          student_count: number
+          target_scope: string
+          target_value: string | null
+          total_amount_billed: number
+          updated_at: string
+        }
+        Insert: {
+          academic_year: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          metadata?: Json | null
+          notes?: string | null
+          period: string
+          school_id?: string | null
+          student_count?: number
+          target_scope?: string
+          target_value?: string | null
+          total_amount_billed?: number
+          updated_at?: string
+        }
+        Update: {
+          academic_year?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          metadata?: Json | null
+          notes?: string | null
+          period?: string
+          school_id?: string | null
+          student_count?: number
+          target_scope?: string
+          target_value?: string | null
+          total_amount_billed?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "finance_billing_runs_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finance_billing_runs_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       finance_config_audit: {
         Row: {
@@ -599,6 +1203,743 @@ export type Database = {
           },
         ]
       }
+      interventions: {
+        Row: {
+          academic_year: string
+          admission_id: string
+          baseline_attendance: number | null
+          baseline_performance: number | null
+          closure_reason: string
+          created_at: string
+          created_by: string | null
+          follow_up_results: string
+          id: string
+          identified_need: string
+          progress_notes: Json
+          responsible_staff_id: string | null
+          responsible_staff_name: string
+          review_date: string
+          risk_indicators: string[]
+          start_date: string
+          status: string
+          strategy: string
+          subject: string
+          target_outcome: string
+          term: string
+          updated_at: string
+        }
+        Insert: {
+          academic_year?: string
+          admission_id: string
+          baseline_attendance?: number | null
+          baseline_performance?: number | null
+          closure_reason?: string
+          created_at?: string
+          created_by?: string | null
+          follow_up_results?: string
+          id?: string
+          identified_need?: string
+          progress_notes?: Json
+          responsible_staff_id?: string | null
+          responsible_staff_name?: string
+          review_date?: string
+          risk_indicators?: string[]
+          start_date?: string
+          status?: string
+          strategy?: string
+          subject?: string
+          target_outcome?: string
+          term?: string
+          updated_at?: string
+        }
+        Update: {
+          academic_year?: string
+          admission_id?: string
+          baseline_attendance?: number | null
+          baseline_performance?: number | null
+          closure_reason?: string
+          created_at?: string
+          created_by?: string | null
+          follow_up_results?: string
+          id?: string
+          identified_need?: string
+          progress_notes?: Json
+          responsible_staff_id?: string | null
+          responsible_staff_name?: string
+          review_date?: string
+          risk_indicators?: string[]
+          start_date?: string
+          status?: string
+          strategy?: string
+          subject?: string
+          target_outcome?: string
+          term?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interventions_admission_id_fkey"
+            columns: ["admission_id"]
+            isOneToOne: false
+            referencedRelation: "admissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interventions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interventions_responsible_staff_id_fkey"
+            columns: ["responsible_staff_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lesson_completions: {
+        Row: {
+          admission_id: string | null
+          completed_at: string
+          created_at: string
+          id: string
+          lesson_id: string
+          quiz_submission_id: string | null
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          admission_id?: string | null
+          completed_at?: string
+          created_at?: string
+          id?: string
+          lesson_id: string
+          quiz_submission_id?: string | null
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          admission_id?: string | null
+          completed_at?: string
+          created_at?: string
+          id?: string
+          lesson_id?: string
+          quiz_submission_id?: string | null
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_completions_admission_id_fkey"
+            columns: ["admission_id"]
+            isOneToOne: false
+            referencedRelation: "admissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_completions_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_completions_quiz_submission_id_fkey"
+            columns: ["quiz_submission_id"]
+            isOneToOne: false
+            referencedRelation: "exam_submissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_completions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lessons: {
+        Row: {
+          class_name: string
+          content: string
+          created_at: string
+          created_by: string | null
+          description: string
+          id: string
+          intro_video_url: string
+          order_index: number
+          quiz_id: string | null
+          status: string
+          subject: string
+          term: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          class_name: string
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          id?: string
+          intro_video_url?: string
+          order_index?: number
+          quiz_id?: string | null
+          status?: string
+          subject: string
+          term?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          class_name?: string
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          id?: string
+          intro_video_url?: string
+          order_index?: number
+          quiz_id?: string | null
+          status?: string
+          subject?: string
+          term?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lessons_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lessons_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "exams_quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      library_books: {
+        Row: {
+          author: string
+          available_copies: number
+          call_number: string
+          category: string
+          cover_url: string
+          created_at: string
+          description: string
+          id: string
+          isbn: string
+          publication_year: number | null
+          publisher: string
+          school_id: string | null
+          shelf_location: string
+          status: string
+          title: string
+          total_copies: number
+          updated_at: string
+        }
+        Insert: {
+          author: string
+          available_copies?: number
+          call_number?: string
+          category?: string
+          cover_url?: string
+          created_at?: string
+          description?: string
+          id?: string
+          isbn?: string
+          publication_year?: number | null
+          publisher?: string
+          school_id?: string | null
+          shelf_location?: string
+          status?: string
+          title: string
+          total_copies?: number
+          updated_at?: string
+        }
+        Update: {
+          author?: string
+          available_copies?: number
+          call_number?: string
+          category?: string
+          cover_url?: string
+          created_at?: string
+          description?: string
+          id?: string
+          isbn?: string
+          publication_year?: number | null
+          publisher?: string
+          school_id?: string | null
+          shelf_location?: string
+          status?: string
+          title?: string
+          total_copies?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "library_books_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      library_loans: {
+        Row: {
+          book_id: string
+          borrower_admission_id: string | null
+          borrower_identifier: string
+          borrower_name: string
+          borrower_profile_id: string | null
+          borrower_type: string
+          class_name: string
+          created_at: string
+          department: string
+          due_date: string
+          fine_amount: number
+          fine_paid: boolean
+          id: string
+          issue_date: string
+          issued_by: string | null
+          notes: string
+          renewal_count: number
+          return_date: string | null
+          school_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          book_id: string
+          borrower_admission_id?: string | null
+          borrower_identifier?: string
+          borrower_name: string
+          borrower_profile_id?: string | null
+          borrower_type: string
+          class_name?: string
+          created_at?: string
+          department?: string
+          due_date: string
+          fine_amount?: number
+          fine_paid?: boolean
+          id?: string
+          issue_date?: string
+          issued_by?: string | null
+          notes?: string
+          renewal_count?: number
+          return_date?: string | null
+          school_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          book_id?: string
+          borrower_admission_id?: string | null
+          borrower_identifier?: string
+          borrower_name?: string
+          borrower_profile_id?: string | null
+          borrower_type?: string
+          class_name?: string
+          created_at?: string
+          department?: string
+          due_date?: string
+          fine_amount?: number
+          fine_paid?: boolean
+          id?: string
+          issue_date?: string
+          issued_by?: string | null
+          notes?: string
+          renewal_count?: number
+          return_date?: string | null
+          school_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "library_loans_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "library_books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "library_loans_borrower_admission_id_fkey"
+            columns: ["borrower_admission_id"]
+            isOneToOne: false
+            referencedRelation: "admissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "library_loans_borrower_profile_id_fkey"
+            columns: ["borrower_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "library_loans_issued_by_fkey"
+            columns: ["issued_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "library_loans_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      library_reservations: {
+        Row: {
+          book_id: string
+          borrower_admission_id: string | null
+          borrower_name: string
+          borrower_profile_id: string | null
+          created_at: string
+          id: string
+          reservation_date: string
+          school_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          book_id: string
+          borrower_admission_id?: string | null
+          borrower_name: string
+          borrower_profile_id?: string | null
+          created_at?: string
+          id?: string
+          reservation_date?: string
+          school_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          book_id?: string
+          borrower_admission_id?: string | null
+          borrower_name?: string
+          borrower_profile_id?: string | null
+          created_at?: string
+          id?: string
+          reservation_date?: string
+          school_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "library_reservations_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "library_books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "library_reservations_borrower_admission_id_fkey"
+            columns: ["borrower_admission_id"]
+            isOneToOne: false
+            referencedRelation: "admissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "library_reservations_borrower_profile_id_fkey"
+            columns: ["borrower_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "library_reservations_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messaging_announcement_reads: {
+        Row: {
+          announcement_id: string
+          id: string
+          read_at: string
+          user_id: string
+        }
+        Insert: {
+          announcement_id: string
+          id?: string
+          read_at?: string
+          user_id: string
+        }
+        Update: {
+          announcement_id?: string
+          id?: string
+          read_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messaging_announcement_reads_announcement_id_fkey"
+            columns: ["announcement_id"]
+            isOneToOne: false
+            referencedRelation: "messaging_announcements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messaging_announcement_reads_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messaging_announcements: {
+        Row: {
+          attachment_name: string
+          attachment_url: string
+          audience: string
+          channels: Json
+          content: string
+          created_at: string
+          created_by: string | null
+          expire_at: string | null
+          id: string
+          is_pinned: boolean
+          priority: string
+          publish_at: string
+          school_id: string | null
+          status: string
+          summary: string
+          target_class_id: string | null
+          target_role: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          attachment_name?: string
+          attachment_url?: string
+          audience?: string
+          channels?: Json
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          expire_at?: string | null
+          id?: string
+          is_pinned?: boolean
+          priority?: string
+          publish_at?: string
+          school_id?: string | null
+          status?: string
+          summary?: string
+          target_class_id?: string | null
+          target_role?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          attachment_name?: string
+          attachment_url?: string
+          audience?: string
+          channels?: Json
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          expire_at?: string | null
+          id?: string
+          is_pinned?: boolean
+          priority?: string
+          publish_at?: string
+          school_id?: string | null
+          status?: string
+          summary?: string
+          target_class_id?: string | null
+          target_role?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messaging_announcements_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messaging_announcements_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messaging_announcements_target_class_id_fkey"
+            columns: ["target_class_id"]
+            isOneToOne: false
+            referencedRelation: "school_classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messaging_conversation_participants: {
+        Row: {
+          conversation_id: string
+          id: string
+          joined_at: string
+          last_read_at: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          id?: string
+          joined_at?: string
+          last_read_at?: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          id?: string
+          joined_at?: string
+          last_read_at?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messaging_conversation_participants_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "messaging_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messaging_conversation_participants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messaging_conversations: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          is_group: boolean
+          last_message_at: string
+          last_message_preview: string
+          school_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_group?: boolean
+          last_message_at?: string
+          last_message_preview?: string
+          school_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_group?: boolean
+          last_message_at?: string
+          last_message_preview?: string
+          school_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messaging_conversations_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messaging_conversations_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messaging_direct_messages: {
+        Row: {
+          attachment_name: string
+          attachment_url: string
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          is_edited: boolean
+          sender_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          attachment_name?: string
+          attachment_url?: string
+          content?: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          is_edited?: boolean
+          sender_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          attachment_name?: string
+          attachment_url?: string
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          is_edited?: boolean
+          sender_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messaging_direct_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "messaging_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messaging_direct_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       numbering_counters: {
         Row: {
           kind: string
@@ -845,6 +2186,452 @@ export type Database = {
           username?: string | null
         }
         Relationships: []
+      }
+      publicity_articles: {
+        Row: {
+          action_button_label: string
+          action_button_url: string
+          attachments: Json
+          author_name: string
+          author_role: string
+          category: string
+          created_at: string
+          created_by: string | null
+          featured_image: string
+          full_content: string
+          gallery_images: Json
+          headline: string
+          id: string
+          is_featured: boolean
+          is_pinned: boolean
+          publication_date: string
+          relevant_details_link: string
+          school_id: string | null
+          seo_keywords: string
+          seo_title: string
+          short_summary: string
+          slug: string
+          status: string
+          title: string
+          updated_at: string
+          view_count: number
+        }
+        Insert: {
+          action_button_label?: string
+          action_button_url?: string
+          attachments?: Json
+          author_name?: string
+          author_role?: string
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          featured_image?: string
+          full_content?: string
+          gallery_images?: Json
+          headline?: string
+          id?: string
+          is_featured?: boolean
+          is_pinned?: boolean
+          publication_date?: string
+          relevant_details_link?: string
+          school_id?: string | null
+          seo_keywords?: string
+          seo_title?: string
+          short_summary?: string
+          slug?: string
+          status?: string
+          title: string
+          updated_at?: string
+          view_count?: number
+        }
+        Update: {
+          action_button_label?: string
+          action_button_url?: string
+          attachments?: Json
+          author_name?: string
+          author_role?: string
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          featured_image?: string
+          full_content?: string
+          gallery_images?: Json
+          headline?: string
+          id?: string
+          is_featured?: boolean
+          is_pinned?: boolean
+          publication_date?: string
+          relevant_details_link?: string
+          school_id?: string | null
+          seo_keywords?: string
+          seo_title?: string
+          short_summary?: string
+          slug?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          view_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "publicity_articles_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "publicity_articles_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      publicity_banners: {
+        Row: {
+          auto_flip: boolean
+          created_at: string
+          created_by: string | null
+          description: string
+          id: string
+          placement: string
+          school_id: string | null
+          show_arrows: boolean
+          show_indicators: boolean
+          show_pause_controls: boolean
+          slide_duration: number
+          slides: Json
+          status: string
+          title: string
+          transition_effect: string
+          updated_at: string
+        }
+        Insert: {
+          auto_flip?: boolean
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          id?: string
+          placement?: string
+          school_id?: string | null
+          show_arrows?: boolean
+          show_indicators?: boolean
+          show_pause_controls?: boolean
+          slide_duration?: number
+          slides?: Json
+          status?: string
+          title: string
+          transition_effect?: string
+          updated_at?: string
+        }
+        Update: {
+          auto_flip?: boolean
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          id?: string
+          placement?: string
+          school_id?: string | null
+          show_arrows?: boolean
+          show_indicators?: boolean
+          show_pause_controls?: boolean
+          slide_duration?: number
+          slides?: Json
+          status?: string
+          title?: string
+          transition_effect?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "publicity_banners_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "publicity_banners_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      publicity_circulars: {
+        Row: {
+          content: string
+          created_at: string
+          created_by: string | null
+          deep_link: string
+          document_name: string
+          document_url: string
+          external_link: string
+          featured_image: string
+          id: string
+          is_featured: boolean
+          issue_date: string
+          issuing_department: string
+          reference_number: string
+          school_id: string | null
+          status: string
+          summary: string
+          title: string
+          updated_at: string
+          visibility: string
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          deep_link?: string
+          document_name?: string
+          document_url?: string
+          external_link?: string
+          featured_image?: string
+          id?: string
+          is_featured?: boolean
+          issue_date?: string
+          issuing_department?: string
+          reference_number?: string
+          school_id?: string | null
+          status?: string
+          summary?: string
+          title: string
+          updated_at?: string
+          visibility?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          deep_link?: string
+          document_name?: string
+          document_url?: string
+          external_link?: string
+          featured_image?: string
+          id?: string
+          is_featured?: boolean
+          issue_date?: string
+          issuing_department?: string
+          reference_number?: string
+          school_id?: string | null
+          status?: string
+          summary?: string
+          title?: string
+          updated_at?: string
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "publicity_circulars_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "publicity_circulars_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      publicity_media_gallery: {
+        Row: {
+          caption: string
+          category: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_featured: boolean
+          media_type: string
+          media_url: string
+          school_id: string | null
+          status: string
+          tags: string[]
+          thumbnail_url: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          caption?: string
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_featured?: boolean
+          media_type?: string
+          media_url: string
+          school_id?: string | null
+          status?: string
+          tags?: string[]
+          thumbnail_url?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          caption?: string
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_featured?: boolean
+          media_type?: string
+          media_url?: string
+          school_id?: string | null
+          status?: string
+          tags?: string[]
+          thumbnail_url?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "publicity_media_gallery_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "publicity_media_gallery_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      publicity_notices: {
+        Row: {
+          attachment_name: string
+          attachment_url: string
+          content: string
+          created_at: string
+          created_by: string | null
+          expire_at: string | null
+          id: string
+          image_url: string
+          is_featured: boolean
+          is_pinned: boolean
+          label: string
+          publish_at: string
+          read_more_link: string
+          school_id: string | null
+          status: string
+          summary: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          attachment_name?: string
+          attachment_url?: string
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          expire_at?: string | null
+          id?: string
+          image_url?: string
+          is_featured?: boolean
+          is_pinned?: boolean
+          label?: string
+          publish_at?: string
+          read_more_link?: string
+          school_id?: string | null
+          status?: string
+          summary?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          attachment_name?: string
+          attachment_url?: string
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          expire_at?: string | null
+          id?: string
+          image_url?: string
+          is_featured?: boolean
+          is_pinned?: boolean
+          label?: string
+          publish_at?: string
+          read_more_link?: string
+          school_id?: string | null
+          status?: string
+          summary?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "publicity_notices_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "publicity_notices_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      result_publications: {
+        Row: {
+          class_name: string
+          created_at: string
+          id: string
+          notes: string
+          published_at: string
+          published_by: string | null
+          status: string
+          term: string
+          updated_at: string
+          withheld_student_ids: Json
+        }
+        Insert: {
+          class_name: string
+          created_at?: string
+          id?: string
+          notes?: string
+          published_at?: string
+          published_by?: string | null
+          status?: string
+          term: string
+          updated_at?: string
+          withheld_student_ids?: Json
+        }
+        Update: {
+          class_name?: string
+          created_at?: string
+          id?: string
+          notes?: string
+          published_at?: string
+          published_by?: string | null
+          status?: string
+          term?: string
+          updated_at?: string
+          withheld_student_ids?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "result_publications_published_by_fkey"
+            columns: ["published_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       school_branding: {
         Row: {
@@ -1526,6 +3313,98 @@ export type Database = {
             columns: ["school_id"]
             isOneToOne: true
             referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      timetable_slots: {
+        Row: {
+          class_name: string
+          created_at: string
+          created_by: string | null
+          day_of_week: string
+          description: string
+          end_time: string
+          event_type: string
+          id: string
+          quiz_id: string | null
+          room_number: string
+          school_id: string | null
+          specific_date: string | null
+          start_time: string
+          subject: string
+          teacher_id: string | null
+          term: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          class_name: string
+          created_at?: string
+          created_by?: string | null
+          day_of_week: string
+          description?: string
+          end_time: string
+          event_type?: string
+          id?: string
+          quiz_id?: string | null
+          room_number?: string
+          school_id?: string | null
+          specific_date?: string | null
+          start_time: string
+          subject: string
+          teacher_id?: string | null
+          term?: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          class_name?: string
+          created_at?: string
+          created_by?: string | null
+          day_of_week?: string
+          description?: string
+          end_time?: string
+          event_type?: string
+          id?: string
+          quiz_id?: string | null
+          room_number?: string
+          school_id?: string | null
+          specific_date?: string | null
+          start_time?: string
+          subject?: string
+          teacher_id?: string | null
+          term?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "timetable_slots_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timetable_slots_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "exams_quizzes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timetable_slots_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timetable_slots_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
