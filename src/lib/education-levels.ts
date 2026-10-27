@@ -8,6 +8,31 @@ import type { LevelRef } from "./teaching-levels";
 
 const key = (s: string) => s.trim().toLowerCase();
 
+/**
+ * Static fallback level list for pickers when the school's configured
+ * education_levels rows have not loaded yet. The database catalog remains
+ * the source of truth; these only keep imported module UIs usable offline.
+ */
+export const ALL_LEVELS = [
+  { code: "KG", name: "Kindergarten" },
+  { code: "PRIMARY", name: "Primary School" },
+  { code: "JHS", name: "Junior High School" },
+  { code: "SHS", name: "Senior High School" },
+] as const;
+
+export const EDUCATION_LEVELS = ALL_LEVELS;
+
+/** Best-effort level guess from a class name when no catalog is available. */
+export function inferEducationLevel(className: string | null | undefined): string {
+  if (!className) return "PRIMARY";
+  const norm = className.trim().toLowerCase();
+  if (norm.includes("primary") || norm.includes("basic")) return "PRIMARY";
+  if (norm.includes("jhs") || norm.includes("junior")) return "JHS";
+  if (norm.includes("shs") || norm.includes("senior")) return "SHS";
+  if (norm.includes("kg") || norm.includes("nursery") || norm.includes("kindergarten")) return "KG";
+  return "PRIMARY";
+}
+
 /** Level code of a named class, or null when the class is unknown. */
 export function levelOfClass(classCatalog: LevelRef[], className: string | null | undefined): string | null {
   if (!className) return null;
