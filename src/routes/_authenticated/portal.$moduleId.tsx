@@ -15,14 +15,26 @@ import { FinancialConfiguration } from "@/components/modules/FinancialConfigurat
 import { UserVerification } from "@/components/modules/UserVerification";
 import { AttendanceManagement } from "@/components/modules/AttendanceManagement";
 import { AssessmentManagement } from "@/components/modules/AssessmentManagement";
+import { AssignmentManagement } from "@/components/modules/AssignmentManagement";
 import { TermlyReports } from "@/components/modules/TermlyReports";
 import { ArchivesManagement } from "@/components/modules/ArchivesManagement";
 import { AcademicConfiguration } from "@/components/modules/AcademicConfiguration";
+import { ExamsQuizzes } from "@/components/modules/ExamsQuizzes";
 import { PeopleConfiguration } from "@/components/modules/PeopleConfiguration";
 import { OperationsConfiguration } from "@/components/modules/OperationsConfiguration";
 import { ConfigDomainPlaceholder } from "@/components/modules/ConfigDomainPlaceholder";
 import { isConfigDomain } from "@/lib/config-domains";
 import { useSchoolName } from "@/hooks/useSchoolName";
+import { ResultsManagement } from "@/components/modules/ResultsManagement";
+import { LessonsManagement } from "@/components/modules/LessonsManagement";
+import { StudentsManagement } from "@/components/modules/StudentsManagement";
+import { PublicityManagement } from "@/components/modules/PublicityManagement";
+import { FeesInvoicingManagement } from "@/components/modules/FeesInvoicingManagement";
+import { InvoicesManagement } from "@/components/modules/InvoicesManagement";
+import { LibraryManagement } from "@/components/modules/LibraryManagement";
+import { MessagingManagement } from "@/components/modules/MessagingManagement";
+import { TimetableManagement } from "@/components/modules/TimetableManagement";
+import { PerformanceTrackerManagement } from "@/components/modules/PerformanceTrackerManagement";
 
 
 export const Route = createFileRoute("/_authenticated/portal/$moduleId")({
@@ -97,7 +109,27 @@ function ModulePage() {
         </div>
       </header>
 
-      {mod.id === "user-management" ? (
+      {mod.id === "performance-tracker" ? (
+        <PerformanceTrackerManagement />
+      ) : mod.id === "fees-invoicing" ? (
+        <FeesInvoicingManagement />
+      ) : mod.id === "invoices" ? (
+        <InvoicesManagement />
+      ) : mod.id === "timetable" ? (
+        <TimetableManagement />
+      ) : mod.id === "messaging" ? (
+        <MessagingManagement />
+      ) : mod.id === "library" ? (
+        <LibraryManagement />
+      ) : mod.id === "lessons" ? (
+        <LessonsManagement />
+      ) : mod.id === "students" ? (
+        <StudentsManagement />
+      ) : mod.id === "exams-quizzes" ? (
+        <ExamsQuizzes />
+      ) : mod.id === "publicity" ? (
+        <PublicityManagement />
+      ) : mod.id === "user-management" ? (
         <UserManagement />
       ) : mod.id === "staff-management" ? (
         <StaffManagement />
@@ -123,10 +155,14 @@ function ModulePage() {
         <UserVerification />
       ) : mod.id === "attendance" ? (
         <AttendanceManagement />
+      ) : mod.id === "results" ? (
+        <ResultsManagement />
       ) : mod.id === "termly-reports" ? (
         <TermlyReports />
       ) : mod.id === "assessment" ? (
         <AssessmentManagement />
+      ) : mod.id === "assignments" ? (
+        <AssignmentManagement />
       ) : mod.id === "archives" ? (
         <ArchivesManagement />
       ) : isConfigDomain(mod.id) ? (
