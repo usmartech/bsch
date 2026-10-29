@@ -13,6 +13,7 @@ import {
 } from "@/lib/invoices";
 import { useFinanceConfig } from "@/hooks/useFinanceConfig";
 import { printDocument } from "@/lib/print-document";
+import type { RecordInvoicePaymentInput, IssueInvoiceInput, VoidInvoiceInput } from "@/lib/invoices.schemas";
 import { ALL_LEVELS } from "@/lib/education-levels";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -134,8 +135,7 @@ export function InvoicesManagement() {
 
   // Mutations
   const recordPayMut = useMutation({
-    mutationFn: (data: Parameters<typeof recordInvoicePayment>[0]["data"]) =>
-      recordInvoicePayment({ data }),
+    mutationFn: (data: RecordInvoicePaymentInput) => recordInvoicePayment({ data }),
     onSuccess: () => {
       toast.success("Payment successfully recorded against invoice!");
       queryClient.invalidateQueries({ queryKey: ["invoicesOverview"] });
@@ -147,7 +147,7 @@ export function InvoicesManagement() {
   });
 
   const issueInvMut = useMutation({
-    mutationFn: (data: Parameters<typeof issueInvoice>[0]["data"]) => issueInvoice({ data }),
+    mutationFn: (data: IssueInvoiceInput) => issueInvoice({ data }),
     onSuccess: () => {
       toast.success("New invoice issued successfully!");
       queryClient.invalidateQueries({ queryKey: ["invoicesOverview"] });
@@ -162,7 +162,7 @@ export function InvoicesManagement() {
   });
 
   const voidInvMut = useMutation({
-    mutationFn: (data: Parameters<typeof voidInvoice>[0]["data"]) => voidInvoice({ data }),
+    mutationFn: (data: VoidInvoiceInput) => voidInvoice({ data }),
     onSuccess: () => {
       toast.success("Invoice voided successfully");
       queryClient.invalidateQueries({ queryKey: ["invoicesOverview"] });
@@ -734,7 +734,7 @@ export function InvoicesManagement() {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs">Amount Paid ({finConfig.currency.code})</Label>
+                <Label className="text-xs">Amount Paid ({finConfig.symbol})</Label>
                 <Input
                   type="number"
                   min="0.01"

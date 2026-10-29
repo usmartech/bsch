@@ -55,8 +55,8 @@ export interface FeeStructureItem {
   fee_category: string;
   amount: number;
   class_name?: string | null;
-  scope?: string;
-  period?: string;
+  scope?: string | undefined;
+  period?: string | undefined;
   levels?: Record<string, number> | string | undefined;
 }
 
