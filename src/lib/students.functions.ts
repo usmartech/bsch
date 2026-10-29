@@ -13,8 +13,8 @@ import {
   updateStudentClassSchema,
   updateStudentDetailSchema,
 } from "@/lib/students.schemas";
-import {
 import type { Json } from "@/integrations/supabase/types";
+import {
   evaluateStudentLifecycle,
   summariseStudentAcademics,
   summariseStudentFinance,
