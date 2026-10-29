@@ -6,12 +6,12 @@
  * Aligned with Financial Configuration (Area 03 & Area 11).
  * ------------------------------------------------------------------ */
 
-import { calculatePaymentStatus, type FeeStatus } from "./finance";
+import { calculatePaymentStatus, type PaymentStatus } from "./fees-invoicing";
 import { formatNumber, previewNumber } from "./numbering";
 import { inferEducationLevel } from "./education-levels";
 import type { StudentFeeRecord } from "./fees-invoicing";
 
-export type InvoiceStatus = FeeStatus | "void";
+export type InvoiceStatus = PaymentStatus | "void";
 
 export interface InvoiceLineItem {
   id: string;

@@ -2,9 +2,9 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertAdmin, logAudit } from "@/lib/admin.server";
 import { resolveProvisionedSchool } from "@/lib/school.server";
-import { assertPeriodOpen, calendarPeriodEnd } from "@/lib/academic-calendar.server";
-import { parseCalendar, currentPeriod, writeBlockReason, CALENDAR_FEATURE_KEY } from "@/lib/academic-calendar";
-import { calculatePaymentStatus } from "@/lib/finance";
+import { assertPeriodOpen, calendarPeriodEnd, loadCalendar } from "@/lib/academic-calendar.server";
+import { parseCalendar, currentPeriod, writeBlockReason } from "@/lib/academic-calendar";
+import { calculatePaymentStatus } from "@/lib/fees-invoicing";
 import { resolveApplicableFees, type FeeStructureItem } from "@/lib/fees-invoicing";
 import { inferEducationLevel } from "@/lib/education-levels";
 import {
@@ -26,12 +26,12 @@ export const getFeesInvoicingOverview = createServerFn({ method: "GET" })
 
     const [activeConfigRes, calRow, studentsRes, classesRes, feesRes, runsRes, userRes] = await Promise.all([
       getActiveFinanceConfig(),
-      supabase.from("system_settings").select("payload").eq("feature_key", CALENDAR_FEATURE_KEY).maybeSingle(),
+      loadCalendar(supabase),
       supabase
         .from("admissions")
         .select("id, admission_number, student_name, class_admitted, status")
         .order("student_name"),
-      supabase.from("school_classes").select("id, name, code, education_level").order("name"),
+      supabase.from("school_classes").select("id, name, level_code").order("name"),
       supabase
         .from("student_fees")
         .select("*, admissions(admission_number, student_name, class_admitted)")
@@ -50,7 +50,7 @@ export const getFeesInvoicingOverview = createServerFn({ method: "GET" })
     const failure = studentsRes.error ?? classesRes.error ?? feesRes.error ?? runsRes.error;
     if (failure) throw new Error(failure.message);
 
-    const academicCalendar = parseCalendar(calRow.data?.payload);
+    const academicCalendar = calRow ?? parseCalendar(null);
     const activePeriod = currentPeriod(academicCalendar);
 
     // Extract fee structures from active reference items & settings
@@ -65,7 +65,14 @@ export const getFeesInvoicingOverview = createServerFn({ method: "GET" })
         class_name: meta["class_name"] ? String(meta["class_name"]) : null,
         scope: meta["scope"] ? String(meta["scope"]) : "active-period",
         period: meta["period"] ? String(meta["period"]) : undefined,
-        levels: (meta["levels"] as Record<string, number> | undefined) ?? undefined,
+        levels:
+          typeof meta["levels"] === "string"
+            ? meta["levels"]
+            : meta["levels"] && typeof meta["levels"] === "object"
+              ? Object.fromEntries(
+                  Object.entries(meta["levels"]).map(([key, value]) => [key, Number(value)]),
+                )
+              : undefined,
       };
     });
 
@@ -98,12 +105,7 @@ export const executeBillingRun = createServerFn({ method: "POST" })
     const { supabase } = context;
 
     // Check academic calendar lock status
-    const calRow = await supabase
-      .from("system_settings")
-      .select("payload")
-      .eq("feature_key", CALENDAR_FEATURE_KEY)
-      .maybeSingle();
-    const calendar = parseCalendar(calRow.data?.payload);
+    const calendar = (await loadCalendar(supabase)) ?? parseCalendar(null);
     const blockReason = writeBlockReason(calendar, { period: data.period });
     if (blockReason) throw new Error(blockReason);
 
@@ -129,7 +131,14 @@ export const executeBillingRun = createServerFn({ method: "POST" })
         class_name: meta["class_name"] ? String(meta["class_name"]) : null,
         scope: meta["scope"] ? String(meta["scope"]) : "active-period",
         period: meta["period"] ? String(meta["period"]) : undefined,
-        levels: (meta["levels"] as Record<string, number> | undefined) ?? undefined,
+        levels:
+          typeof meta["levels"] === "string"
+            ? meta["levels"]
+            : meta["levels"] && typeof meta["levels"] === "object"
+              ? Object.fromEntries(
+                  Object.entries(meta["levels"]).map(([key, value]) => [key, Number(value)]),
+                )
+              : undefined,
       };
     });
 
@@ -245,7 +254,7 @@ export const recordFeePayment = createServerFn({ method: "POST" })
       .from("student_fees")
       .update({
         amount_paid: newTotalPaid,
-        status: nextStatus,
+        status: nextStatus === "partially_paid" ? "pending" : nextStatus,
       })
       .eq("id", data.feeId);
 
@@ -317,7 +326,7 @@ export const applyFeeAdjustment = createServerFn({ method: "POST" })
       .from("student_fees")
       .update({
         amount_due: nextDue,
-        status: nextStatus,
+        status: nextStatus === "partially_paid" ? "pending" : nextStatus,
       })
       .eq("id", data.feeId);
 

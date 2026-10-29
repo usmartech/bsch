@@ -6,7 +6,23 @@
  * and cross-module governance integrations.
  * ------------------------------------------------------------------ */
 
-import { calculatePaymentStatus, cedis, type FeeStatus } from "./finance";
+import { FEE_STATUSES } from "./finance";
+
+export type FeeStatus = (typeof FEE_STATUSES)[number];
+/** UI-level payment state; "partially_paid" is never persisted to student_fees. */
+export type PaymentStatus = FeeStatus | "partially_paid";
+
+export function calculatePaymentStatus(
+  amountPaid: number,
+  amountDue: number,
+  dueDate?: string | null,
+  todayStr = new Date().toISOString().slice(0, 10),
+): PaymentStatus {
+  if (amountDue <= 0 || amountPaid >= amountDue) return "paid";
+  if (amountPaid > 0) return "partially_paid";
+  if (dueDate && dueDate < todayStr) return "overdue";
+  return "pending";
+}
 import {
   parseCalendar,
   currentPeriod,
@@ -27,7 +43,7 @@ export interface StudentFeeRecord {
   created_at: string;
   updated_at: string;
   admissions?: {
-    admission_number: string;
+    admission_number: string | null;
     student_name: string;
     class_admitted: string;
   } | null;
