@@ -2,9 +2,9 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertAdmin, logAudit } from "@/lib/admin.server";
 import { resolveProvisionedSchool } from "@/lib/school.server";
-import { assertPeriodOpen, calendarPeriodEnd } from "@/lib/academic-calendar.server";
-import { parseCalendar, currentPeriod, writeBlockReason, CALENDAR_FEATURE_KEY } from "@/lib/academic-calendar";
-import { calculatePaymentStatus } from "@/lib/finance";
+import { assertPeriodOpen, calendarPeriodEnd, loadCalendar } from "@/lib/academic-calendar.server";
+import { parseCalendar, currentPeriod, writeBlockReason } from "@/lib/academic-calendar";
+import { calculatePaymentStatus } from "@/lib/fees-invoicing";
 import { getActiveFinanceConfig } from "@/lib/finance-config.functions";
 import {
   DEFAULT_INVOICE_NUMBERING,
@@ -30,12 +30,12 @@ export const getInvoicesOverview = createServerFn({ method: "GET" })
 
     const [activeConfigRes, calRow, studentsRes, classesRes, feesRes, userRes] = await Promise.all([
       getActiveFinanceConfig(),
-      supabase.from("system_settings").select("payload").eq("feature_key", CALENDAR_FEATURE_KEY).maybeSingle(),
+      loadCalendar(supabase),
       supabase
         .from("admissions")
         .select("id, admission_number, student_name, class_admitted, status")
         .order("student_name"),
-      supabase.from("school_classes").select("id, name, code, education_level").order("name"),
+      supabase.from("school_classes").select("id, name, level_code").order("name"),
       supabase
         .from("student_fees")
         .select("*, admissions(admission_number, student_name, class_admitted)")
@@ -46,28 +46,25 @@ export const getInvoicesOverview = createServerFn({ method: "GET" })
     const failure = studentsRes.error ?? classesRes.error ?? feesRes.error;
     if (failure) throw new Error(failure.message);
 
-    const academicCalendar = parseCalendar(calRow.data?.payload);
+    const academicCalendar = calRow ?? parseCalendar(null);
     const activePeriod = currentPeriod(academicCalendar);
 
     // Extract invoice and receipt numbering templates from active configuration
-    const invSection = (activeConfigRes.sections ?? []).find((s: any) => s.section_key === "invoice-numbering");
-    const rcptSection = (activeConfigRes.sections ?? []).find((s: any) => s.section_key === "receipts");
-
-    const invPayload = invSection?.payload ?? {};
-    const rcptPayload = rcptSection?.payload ?? {};
+    const invPayload = activeConfigRes.settings["invoice-numbering"] ?? {};
+    const rcptPayload = activeConfigRes.settings["receipts"] ?? {};
 
     const invoiceNumberingConfig = {
       format: String(invPayload["format"] ?? "INV-{YY}-{SEQ}"),
       sequenceDigits: Number(invPayload["sequence_digits"] ?? 5) || 5,
       sequenceStart: Number(invPayload["sequence_start"] ?? 1) || 1,
-      schoolCode: school?.code || "0001",
+      schoolCode: DEFAULT_INVOICE_NUMBERING.schoolCode ?? "0001",
     };
 
     const receiptNumberingConfig = {
       format: String(rcptPayload["numbering_format"] ?? "RCT-{YY}-{SEQ}"),
       sequenceDigits: Number(rcptPayload["sequence_digits"] ?? 5) || 5,
       sequenceStart: Number(rcptPayload["sequence_start"] ?? 1) || 1,
-      schoolCode: school?.code || "0001",
+      schoolCode: DEFAULT_RECEIPT_NUMBERING.schoolCode ?? "0001",
     };
 
     const feeRecords = feesRes.data ?? [];
@@ -128,12 +125,7 @@ export const recordInvoicePayment = createServerFn({ method: "POST" })
     }
 
     // Check academic calendar lock
-    const calRow = await supabase
-      .from("system_settings")
-      .select("payload")
-      .eq("feature_key", CALENDAR_FEATURE_KEY)
-      .maybeSingle();
-    const calendar = parseCalendar(calRow.data?.payload);
+    const calendar = (await loadCalendar(supabase)) ?? parseCalendar(null);
     const blockReason = writeBlockReason(calendar, { period: fee.term });
     if (blockReason) throw new Error(blockReason);
 
@@ -152,7 +144,7 @@ export const recordInvoicePayment = createServerFn({ method: "POST" })
       .from("student_fees")
       .update({
         amount_paid: newTotalPaid,
-        status: nextStatus,
+        status: nextStatus === "partially_paid" ? "pending" : nextStatus,
       })
       .eq("id", data.invoiceId);
 
@@ -200,12 +192,7 @@ export const issueInvoice = createServerFn({ method: "POST" })
     const { supabase } = context;
 
     // Check academic calendar lock
-    const calRow = await supabase
-      .from("system_settings")
-      .select("payload")
-      .eq("feature_key", CALENDAR_FEATURE_KEY)
-      .maybeSingle();
-    const calendar = parseCalendar(calRow.data?.payload);
+    const calendar = (await loadCalendar(supabase)) ?? parseCalendar(null);
     const blockReason = writeBlockReason(calendar, { period: data.term });
     if (blockReason) throw new Error(blockReason);
 

@@ -31,7 +31,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { cedis } from "@/lib/finance";
+import { useFinanceConfig } from "@/hooks/useFinanceConfig";
+import { printDocument } from "@/lib/print-document";
 import { EDUCATION_LEVELS } from "@/lib/education-levels";
 import {
   calculateBalanceSummary,
@@ -48,6 +49,7 @@ import {
 } from "@/lib/fees-invoicing.functions";
 
 export function FeesInvoicingManagement() {
+  const finConfig = useFinanceConfig();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("overview");
@@ -167,15 +169,17 @@ export function FeesInvoicingManagement() {
     setExecutingRun(true);
     try {
       const res = await executeBillingRun({
+        data: {
         academicYear: billingAcademicYear,
         period: billingPeriod,
         targetScope: billingScope,
         targetValue: billingTargetValue,
         dueDate: billingDueDate || null,
         notes: billingNotes,
+        },
       });
       toast.success(
-        `Billing run executed successfully! Billed ${res.studentsBilled} students for total of ${cedis(res.totalBilled)}.`,
+        `Billing run executed successfully! Billed ${res.studentsBilled} students for total of ${finConfig.money(res.totalBilled)}.`,
       );
       setIsBillingRunOpen(false);
       setBillingNotes("");
@@ -199,14 +203,16 @@ export function FeesInvoicingManagement() {
     setRecordingPayment(true);
     try {
       await recordFeePayment({
+        data: {
         feeId: selectedFeeRecord.id,
         amountPaid: amount,
         paymentMethod,
         reference: paymentReference,
         entryDate: paymentDate,
         postToIncome,
+        },
       });
-      toast.success(`Recorded payment of ${cedis(amount)} successfully.`);
+      toast.success(`Recorded payment of ${finConfig.money(amount)} successfully.`);
       setIsPaymentOpen(false);
       setSelectedFeeRecord(null);
       setPaymentAmount("");
@@ -235,12 +241,14 @@ export function FeesInvoicingManagement() {
     setApplyingAdjustment(true);
     try {
       await applyFeeAdjustment({
+        data: {
         feeId: selectedFeeRecord.id,
         adjustmentType,
         amount,
         reason: adjustmentReason,
+        },
       });
-      toast.success(`Applied ${adjustmentType} of ${cedis(amount)} successfully.`);
+      toast.success(`Applied ${adjustmentType} of ${finConfig.money(amount)} successfully.`);
       setIsAdjustmentOpen(false);
       setSelectedFeeRecord(null);
       setAdjustmentAmount("");
@@ -337,7 +345,7 @@ export function FeesInvoicingManagement() {
             <Card>
               <CardHeader className="pb-2">
                 <CardDescription className="text-xs font-semibold uppercase tracking-wider">Total Billed</CardDescription>
-                <CardTitle className="text-2xl font-bold">{cedis(balanceSummary.totalBilled)}</CardTitle>
+                <CardTitle className="text-2xl font-bold">{finConfig.money(balanceSummary.totalBilled)}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-xs text-muted-foreground">Cumulative fees billed across all terms</p>
@@ -347,7 +355,7 @@ export function FeesInvoicingManagement() {
             <Card className="border-emerald-500/20 bg-emerald-500/5">
               <CardHeader className="pb-2">
                 <CardDescription className="text-xs font-semibold uppercase tracking-wider text-emerald-700">Total Collected</CardDescription>
-                <CardTitle className="text-2xl font-bold text-emerald-700">{cedis(balanceSummary.totalPaid)}</CardTitle>
+                <CardTitle className="text-2xl font-bold text-emerald-700">{finConfig.money(balanceSummary.totalPaid)}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center justify-between text-xs text-emerald-700 font-medium">
@@ -361,7 +369,7 @@ export function FeesInvoicingManagement() {
             <Card className="border-amber-500/20 bg-amber-500/5">
               <CardHeader className="pb-2">
                 <CardDescription className="text-xs font-semibold uppercase tracking-wider text-amber-700">Outstanding Balance</CardDescription>
-                <CardTitle className="text-2xl font-bold text-amber-700">{cedis(balanceSummary.totalOutstanding)}</CardTitle>
+                <CardTitle className="text-2xl font-bold text-amber-700">{finConfig.money(balanceSummary.totalOutstanding)}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-xs text-amber-700">Uncollected total across active students</p>
@@ -371,7 +379,7 @@ export function FeesInvoicingManagement() {
             <Card className="border-rose-500/20 bg-rose-500/5">
               <CardHeader className="pb-2">
                 <CardDescription className="text-xs font-semibold uppercase tracking-wider text-rose-700">Overdue Balance</CardDescription>
-                <CardTitle className="text-2xl font-bold text-rose-700">{cedis(balanceSummary.totalOverdue)}</CardTitle>
+                <CardTitle className="text-2xl font-bold text-rose-700">{finConfig.money(balanceSummary.totalOverdue)}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-xs text-rose-700">{balanceSummary.overdueCount} student records past due date</p>
@@ -393,7 +401,7 @@ export function FeesInvoicingManagement() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
                     <span className="font-medium text-emerald-700">Fully Paid ({balanceSummary.paidCount})</span>
-                    <span className="text-muted-foreground">{cedis(balanceSummary.totalPaid)}</span>
+                    <span className="text-muted-foreground">{finConfig.money(balanceSummary.totalPaid)}</span>
                   </div>
                   <Progress
                     value={data?.fees?.length ? (balanceSummary.paidCount / data.fees.length) * 100 : 0}
@@ -404,7 +412,7 @@ export function FeesInvoicingManagement() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
                     <span className="font-medium text-amber-700">Partially Paid ({balanceSummary.partiallyPaidCount})</span>
-                    <span className="text-muted-foreground">{cedis(balanceSummary.totalPartiallyPaid)} remaining</span>
+                    <span className="text-muted-foreground">{finConfig.money(balanceSummary.totalPartiallyPaid)} remaining</span>
                   </div>
                   <Progress
                     value={data?.fees?.length ? (balanceSummary.partiallyPaidCount / data.fees.length) * 100 : 0}
@@ -415,7 +423,7 @@ export function FeesInvoicingManagement() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
                     <span className="font-medium text-blue-700">Pending ({balanceSummary.pendingCount})</span>
-                    <span className="text-muted-foreground">{cedis(balanceSummary.totalPending)} pending</span>
+                    <span className="text-muted-foreground">{finConfig.money(balanceSummary.totalPending)} pending</span>
                   </div>
                   <Progress
                     value={data?.fees?.length ? (balanceSummary.pendingCount / data.fees.length) * 100 : 0}
@@ -426,7 +434,7 @@ export function FeesInvoicingManagement() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
                     <span className="font-medium text-rose-700">Overdue ({balanceSummary.overdueCount})</span>
-                    <span className="text-muted-foreground">{cedis(balanceSummary.totalOverdue)} overdue</span>
+                    <span className="text-muted-foreground">{finConfig.money(balanceSummary.totalOverdue)} overdue</span>
                   </div>
                   <Progress
                     value={data?.fees?.length ? (balanceSummary.overdueCount / data.fees.length) * 100 : 0}
@@ -451,7 +459,7 @@ export function FeesInvoicingManagement() {
                   <div>
                     <span className="font-semibold text-foreground">System & Platform Configuration:</span>
                     <p className="text-muted-foreground mt-0.5">
-                      Provides school tenant identity ({data?.school?.name || "Active School"}), currency formatting ({cedis(100)}), and security parameters.
+                      Provides school tenant identity ({data?.school?.name || "Active School"}), currency formatting ({finConfig.money(100)}), and security parameters.
                     </p>
                   </div>
                 </div>
@@ -533,14 +541,14 @@ export function FeesInvoicingManagement() {
                             </Badge>
                           </td>
                           <td className="p-3 text-muted-foreground">{st.class_name || "All Classes"}</td>
-                          <td className="p-3 font-semibold">{cedis(st.amount)}</td>
+                          <td className="p-3 font-semibold">{finConfig.money(st.amount)}</td>
                           <td className="p-3 text-xs capitalize text-muted-foreground">{st.scope || "Active Period"}</td>
                           <td className="p-3 text-xs text-muted-foreground">
                             {st.levels && Object.keys(st.levels).length > 0 ? (
                               <div className="flex flex-wrap gap-1">
                                 {Object.entries(st.levels).map(([lvl, amt]) => (
                                   <Badge key={lvl} variant="secondary" className="text-[10px]">
-                                    {lvl}: {cedis(amt)}
+                                    {lvl}: {finConfig.money(amt)}
                                   </Badge>
                                 ))}
                               </div>
@@ -608,7 +616,7 @@ export function FeesInvoicingManagement() {
                             {run.target_scope} {run.target_value ? `(${run.target_value})` : ""}
                           </td>
                           <td className="p-3 font-medium">{run.student_count}</td>
-                          <td className="p-3 font-bold text-primary">{cedis(run.total_amount_billed)}</td>
+                          <td className="p-3 font-bold text-primary">{finConfig.money(run.total_amount_billed)}</td>
                           <td className="p-3 text-xs text-muted-foreground max-w-xs truncate">{run.notes || "—"}</td>
                         </tr>
                       ))}
@@ -712,9 +720,9 @@ export function FeesInvoicingManagement() {
                           <td className="p-3 font-medium">{item.studentName}</td>
                           <td className="p-3 text-xs text-muted-foreground">{item.className}</td>
                           <td className="p-3 text-xs">{item.term}</td>
-                          <td className="p-3 font-medium">{cedis(item.amountDue)}</td>
-                          <td className="p-3 font-medium text-emerald-700">{cedis(item.amountPaid)}</td>
-                          <td className="p-3 font-bold text-foreground">{cedis(item.balance)}</td>
+                          <td className="p-3 font-medium">{finConfig.money(item.amountDue)}</td>
+                          <td className="p-3 font-medium text-emerald-700">{finConfig.money(item.amountPaid)}</td>
+                          <td className="p-3 font-bold text-foreground">{finConfig.money(item.balance)}</td>
                           <td className="p-3 text-xs text-muted-foreground">{item.dueDate || "—"}</td>
                           <td className="p-3">
                             <Badge
@@ -734,7 +742,7 @@ export function FeesInvoicingManagement() {
                           </td>
                           <td className="p-3 text-right space-x-1">
                             <Button
-                              size="xs"
+                              size="sm"
                               variant="outline"
                               onClick={() => {
                                 setSelectedFeeRecord(item);
@@ -746,7 +754,7 @@ export function FeesInvoicingManagement() {
                               Pay
                             </Button>
                             <Button
-                              size="xs"
+                              size="sm"
                               variant="ghost"
                               onClick={() => {
                                 setSelectedFeeRecord(item);
@@ -756,7 +764,7 @@ export function FeesInvoicingManagement() {
                               Adjust
                             </Button>
                             <Button
-                              size="xs"
+                              size="sm"
                               variant="ghost"
                               onClick={() => {
                                 setSelectedFeeRecord(item);
@@ -934,7 +942,7 @@ export function FeesInvoicingManagement() {
               </div>
               <div className="flex justify-between text-muted-foreground">
                 <span>Estimated Total Billed:</span>
-                <span className="font-bold text-foreground">{cedis(dryRunPreview.estimatedTotalBilled)}</span>
+                <span className="font-bold text-foreground">{finConfig.money(dryRunPreview.estimatedTotalBilled)}</span>
               </div>
             </div>
           </div>
@@ -1100,17 +1108,17 @@ export function FeesInvoicingManagement() {
               <div className="space-y-2 text-xs">
                 <div className="flex justify-between py-1 border-b">
                   <span className="text-muted-foreground">Total Fee Amount Due:</span>
-                  <span className="font-bold">{cedis(selectedFeeRecord.amountDue)}</span>
+                  <span className="font-bold">{finConfig.money(selectedFeeRecord.amountDue)}</span>
                 </div>
 
                 <div className="flex justify-between py-1 border-b">
                   <span className="text-muted-foreground">Total Paid to Date:</span>
-                  <span className="font-bold text-emerald-700">{cedis(selectedFeeRecord.amountPaid)}</span>
+                  <span className="font-bold text-emerald-700">{finConfig.money(selectedFeeRecord.amountPaid)}</span>
                 </div>
 
                 <div className="flex justify-between py-1 border-b">
                   <span className="text-muted-foreground">Net Outstanding Balance:</span>
-                  <span className="font-bold text-primary">{cedis(selectedFeeRecord.balance)}</span>
+                  <span className="font-bold text-primary">{finConfig.money(selectedFeeRecord.balance)}</span>
                 </div>
 
                 <div className="flex justify-between py-1">
@@ -1124,7 +1132,13 @@ export function FeesInvoicingManagement() {
           )}
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => window.print()}>
+            <Button
+                variant="outline"
+                onClick={(event) => {
+                  const element = event.currentTarget.closest<HTMLElement>('[role="dialog"]');
+                  if (element) printDocument(element, "Billing");
+                }}
+              >
               <Printer className="size-4 mr-1.5" />
               Print Statement
             </Button>
