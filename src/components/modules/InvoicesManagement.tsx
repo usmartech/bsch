@@ -12,7 +12,7 @@ import {
   filterInvoices,
 } from "@/lib/invoices";
 import { useFinanceConfig } from "@/hooks/useFinanceConfig";
-import { formatCurrency } from "@/lib/finance";
+import { printDocument } from "@/lib/print-document";
 import { ALL_LEVELS } from "@/lib/education-levels";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -122,7 +122,7 @@ export function InvoicesManagement() {
   // Default initial values when invoice or overview loads
   useEffect(() => {
     if (data?.activePeriod) {
-      setIssueTerm(data.activePeriod);
+      setIssueTerm(data.activePeriod?.name ?? "");
     }
   }, [data]);
 
@@ -134,7 +134,8 @@ export function InvoicesManagement() {
 
   // Mutations
   const recordPayMut = useMutation({
-    mutationFn: recordInvoicePayment,
+    mutationFn: (data: Parameters<typeof recordInvoicePayment>[0]["data"]) =>
+      recordInvoicePayment({ data }),
     onSuccess: () => {
       toast.success("Payment successfully recorded against invoice!");
       queryClient.invalidateQueries({ queryKey: ["invoicesOverview"] });
@@ -146,7 +147,7 @@ export function InvoicesManagement() {
   });
 
   const issueInvMut = useMutation({
-    mutationFn: issueInvoice,
+    mutationFn: (data: Parameters<typeof issueInvoice>[0]["data"]) => issueInvoice({ data }),
     onSuccess: () => {
       toast.success("New invoice issued successfully!");
       queryClient.invalidateQueries({ queryKey: ["invoicesOverview"] });
@@ -161,7 +162,7 @@ export function InvoicesManagement() {
   });
 
   const voidInvMut = useMutation({
-    mutationFn: voidInvoice,
+    mutationFn: (data: Parameters<typeof voidInvoice>[0]["data"]) => voidInvoice({ data }),
     onSuccess: () => {
       toast.success("Invoice voided successfully");
       queryClient.invalidateQueries({ queryKey: ["invoicesOverview"] });
@@ -242,7 +243,7 @@ export function InvoicesManagement() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatCurrency(summary.totalIssued, finConfig.currency)}
+              {finConfig.money(summary.totalIssued)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               {summary.totalInvoicesCount} total issued invoice(s)
@@ -257,7 +258,7 @@ export function InvoicesManagement() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-emerald-600">
-              {formatCurrency(summary.totalCollected, finConfig.currency)}
+              {finConfig.money(summary.totalCollected)}
             </div>
             <p className="text-xs text-emerald-600/80 mt-1 font-medium flex items-center gap-1">
               <TrendingUp className="size-3" /> {summary.collectionRate}% Collection Rate
@@ -272,7 +273,7 @@ export function InvoicesManagement() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-amber-600">
-              {formatCurrency(summary.totalOutstanding, finConfig.currency)}
+              {finConfig.money(summary.totalOutstanding)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               {summary.pendingCount + summary.partiallyPaidCount} pending / partial
@@ -287,7 +288,7 @@ export function InvoicesManagement() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-destructive">
-              {formatCurrency(summary.totalOverdue, finConfig.currency)}
+              {finConfig.money(summary.totalOverdue)}
             </div>
             <p className="text-xs text-destructive/80 mt-1 font-medium">
               {summary.overdueCount} overdue invoice(s)
@@ -427,13 +428,13 @@ export function InvoicesManagement() {
                         )}
                       </TableCell>
                       <TableCell className="text-right font-medium text-xs">
-                        {formatCurrency(inv.amountDue, finConfig.currency)}
+                        {finConfig.money(inv.amountDue)}
                       </TableCell>
                       <TableCell className="text-right font-medium text-xs text-emerald-600">
-                        {formatCurrency(inv.amountPaid, finConfig.currency)}
+                        {finConfig.money(inv.amountPaid)}
                       </TableCell>
                       <TableCell className="text-right font-bold text-xs text-amber-600">
-                        {formatCurrency(inv.balance, finConfig.currency)}
+                        {finConfig.money(inv.balance)}
                       </TableCell>
                       <TableCell>
                         <StatusBadge status={inv.status} />
@@ -526,7 +527,7 @@ export function InvoicesManagement() {
                       </TableCell>
                       <TableCell className="text-xs">{rcpt.entryDate}</TableCell>
                       <TableCell className="text-right font-bold text-sm text-emerald-600">
-                        {formatCurrency(rcpt.amountPaid, finConfig.currency)}
+                        {finConfig.money(rcpt.amountPaid)}
                       </TableCell>
                       <TableCell className="text-right">
                         <Button
@@ -656,7 +657,7 @@ export function InvoicesManagement() {
                         <TableCell className="text-xs font-medium">{item.description}</TableCell>
                         <TableCell className="text-xs capitalize">{item.feeCategory}</TableCell>
                         <TableCell className="text-right text-xs font-mono">
-                          {formatCurrency(item.amount, finConfig.currency)}
+                          {finConfig.money(item.amount)}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -670,19 +671,19 @@ export function InvoicesManagement() {
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Total Billed:</span>
                     <span className="font-mono font-medium">
-                      {formatCurrency(selectedInvoiceForView.amountDue, finConfig.currency)}
+                      {finConfig.money(selectedInvoiceForView.amountDue)}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Amount Paid:</span>
                     <span className="font-mono font-medium text-emerald-600">
-                      {formatCurrency(selectedInvoiceForView.amountPaid, finConfig.currency)}
+                      {finConfig.money(selectedInvoiceForView.amountPaid)}
                     </span>
                   </div>
                   <div className="flex justify-between border-t pt-1.5 font-bold text-sm">
                     <span>Balance Due:</span>
                     <span className="font-mono text-amber-600">
-                      {formatCurrency(selectedInvoiceForView.balance, finConfig.currency)}
+                      {finConfig.money(selectedInvoiceForView.balance)}
                     </span>
                   </div>
                 </div>
@@ -690,7 +691,14 @@ export function InvoicesManagement() {
             </div>
 
             <DialogFooter className="gap-2">
-              <Button variant="outline" onClick={() => window.print()} className="gap-1.5">
+              <Button
+                variant="outline"
+                onClick={(event) => {
+                  const element = event.currentTarget.closest<HTMLElement>('[role="dialog"]');
+                  if (element) printDocument(element, "Invoice");
+                }}
+                className="gap-1.5"
+              >
                 <Printer className="size-4" /> Print Invoice
               </Button>
               <Button onClick={() => setSelectedInvoiceForView(null)}>Close</Button>
@@ -717,11 +725,11 @@ export function InvoicesManagement() {
               <div className="rounded-lg bg-muted/40 p-3 text-xs space-y-1">
                 <div className="flex justify-between">
                   <span>Total Invoice Amount:</span>
-                  <span className="font-mono font-semibold">{formatCurrency(selectedInvoiceForPay.amountDue, finConfig.currency)}</span>
+                  <span className="font-mono font-semibold">{finConfig.money(selectedInvoiceForPay.amountDue)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Current Outstanding Balance:</span>
-                  <span className="font-mono font-bold text-amber-600">{formatCurrency(selectedInvoiceForPay.balance, finConfig.currency)}</span>
+                  <span className="font-mono font-bold text-amber-600">{finConfig.money(selectedInvoiceForPay.balance)}</span>
                 </div>
               </div>
 
@@ -848,7 +856,7 @@ export function InvoicesManagement() {
               <div className="flex items-center justify-between">
                 <Label className="text-xs font-semibold">Line Items</Label>
                 <span className="text-xs font-bold text-primary">
-                  Total: {formatCurrency(lineItemTotal, finConfig.currency)}
+                  Total: {finConfig.money(lineItemTotal)}
                 </span>
               </div>
               {lineItems.map((item, idx) => (
@@ -859,7 +867,7 @@ export function InvoicesManagement() {
                     value={item.description}
                     onChange={(e) => {
                       const updated = [...lineItems];
-                      updated[idx].description = e.target.value;
+                      updated[idx] = { ...updated[idx]!, description: e.target.value };
                       setLineItems(updated);
                     }}
                   />
@@ -867,7 +875,7 @@ export function InvoicesManagement() {
                     value={item.feeCategory}
                     onValueChange={(val) => {
                       const updated = [...lineItems];
-                      updated[idx].feeCategory = val;
+                      updated[idx] = { ...updated[idx]!, feeCategory: val };
                       setLineItems(updated);
                     }}
                   >
@@ -891,7 +899,7 @@ export function InvoicesManagement() {
                     value={item.amount || ""}
                     onChange={(e) => {
                       const updated = [...lineItems];
-                      updated[idx].amount = Number(e.target.value);
+                      updated[idx] = { ...updated[idx]!, amount: Number(e.target.value) };
                       setLineItems(updated);
                     }}
                   />
@@ -1040,13 +1048,20 @@ export function InvoicesManagement() {
               <div className="border-t pt-3 flex justify-between items-center text-sm font-bold">
                 <span>Amount Paid:</span>
                 <span className="font-mono text-emerald-600 text-base">
-                  {formatCurrency(selectedReceiptForView.amountPaid, finConfig.currency)}
+                  {finConfig.money(selectedReceiptForView.amountPaid)}
                 </span>
               </div>
             </div>
 
             <DialogFooter>
-              <Button variant="outline" onClick={() => window.print()} className="gap-1.5">
+              <Button
+                variant="outline"
+                onClick={(event) => {
+                  const element = event.currentTarget.closest<HTMLElement>('[role="dialog"]');
+                  if (element) printDocument(element, "Invoice");
+                }}
+                className="gap-1.5"
+              >
                 <Printer className="size-4" /> Print Receipt
               </Button>
               <Button onClick={() => setSelectedReceiptForView(null)}>Close</Button>

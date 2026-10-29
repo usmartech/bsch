@@ -67,17 +67,17 @@ describe("Invoices Module - Pure Domain Logic & Formatting", () => {
     const { invoices, receipts } = mapFeesToInvoices(rawFees);
 
     expect(invoices.length).toBe(2);
-    expect(invoices[0].studentName).toBe("Kofi Mensah");
-    expect(invoices[0].levelCode).toBe("PRIMARY");
-    expect(invoices[0].balance).toBe(600);
+    expect(invoices[0]!.studentName).toBe("Kofi Mensah");
+    expect(invoices[0]!.levelCode).toBe("PRIMARY");
+    expect(invoices[0]!.balance).toBe(600);
 
-    expect(invoices[1].studentName).toBe("Ama Serwaa");
-    expect(invoices[1].levelCode).toBe("JHS");
-    expect(invoices[1].balance).toBe(0);
+    expect(invoices[1]!.studentName).toBe("Ama Serwaa");
+    expect(invoices[1]!.levelCode).toBe("JHS");
+    expect(invoices[1]!.balance).toBe(0);
 
     expect(receipts.length).toBe(2);
-    expect(receipts[0].amountPaid).toBe(400);
-    expect(receipts[1].amountPaid).toBe(1200);
+    expect(receipts[0]!.amountPaid).toBe(400);
+    expect(receipts[1]!.amountPaid).toBe(1200);
   });
 
   it("calculates accurate summary totals and collection rate", () => {
@@ -192,19 +192,19 @@ describe("Invoices Module - Pure Domain Logic & Formatting", () => {
 
     const searchResult = filterInvoices(sampleInvoices, { search: "jane" });
     expect(searchResult.length).toBe(1);
-    expect(searchResult[0].studentName).toBe("Jane Smith");
+    expect(searchResult[0]!.studentName).toBe("Jane Smith");
 
     const levelResult = filterInvoices(sampleInvoices, { levelCode: "PRIMARY" });
     expect(levelResult.length).toBe(1);
-    expect(levelResult[0].studentName).toBe("John Doe");
+    expect(levelResult[0]!.studentName).toBe("John Doe");
 
     const classResult = filterInvoices(sampleInvoices, { className: "primary 1" });
     expect(classResult.length).toBe(1);
-    expect(classResult[0].studentName).toBe("John Doe");
+    expect(classResult[0]!.studentName).toBe("John Doe");
 
     const statusResult = filterInvoices(sampleInvoices, { status: "PAID" });
     expect(statusResult.length).toBe(1);
-    expect(statusResult[0].studentName).toBe("Jane Smith");
+    expect(statusResult[0]!.studentName).toBe("Jane Smith");
   });
 });
 

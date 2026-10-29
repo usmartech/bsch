@@ -57,14 +57,14 @@ export const getInvoicesOverview = createServerFn({ method: "GET" })
       format: String(invPayload["format"] ?? "INV-{YY}-{SEQ}"),
       sequenceDigits: Number(invPayload["sequence_digits"] ?? 5) || 5,
       sequenceStart: Number(invPayload["sequence_start"] ?? 1) || 1,
-      schoolCode: DEFAULT_INVOICE_NUMBERING.schoolCode,
+      schoolCode: DEFAULT_INVOICE_NUMBERING.schoolCode ?? "0001",
     };
 
     const receiptNumberingConfig = {
       format: String(rcptPayload["numbering_format"] ?? "RCT-{YY}-{SEQ}"),
       sequenceDigits: Number(rcptPayload["sequence_digits"] ?? 5) || 5,
       sequenceStart: Number(rcptPayload["sequence_start"] ?? 1) || 1,
-      schoolCode: DEFAULT_RECEIPT_NUMBERING.schoolCode,
+      schoolCode: DEFAULT_RECEIPT_NUMBERING.schoolCode ?? "0001",
     };
 
     const feeRecords = feesRes.data ?? [];

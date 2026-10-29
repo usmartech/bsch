@@ -57,7 +57,7 @@ export interface FeeStructureItem {
   class_name?: string | null;
   scope?: string;
   period?: string;
-  levels?: Record<string, number> | string;
+  levels?: Record<string, number> | string | undefined;
 }
 
 export interface StudentBalanceSummary {
@@ -84,7 +84,7 @@ export interface StudentLedgerItem {
   amountDue: number;
   amountPaid: number;
   balance: number;
-  status: FeeStatus;
+  status: PaymentStatus;
   dueDate: string | null;
   createdAt: string;
 }
