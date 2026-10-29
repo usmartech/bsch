@@ -272,7 +272,7 @@ export function FeesInvoicingManagement() {
     );
   }
 
-  const termsList = Array.from(new Set((data?.fees ?? []).map((f: any) => f.term))).filter(Boolean);
+  const termsList = Array.from(new Set((data?.fees ?? []).map((f: any) => String(f.term)))).filter(Boolean) as string[];
 
   return (
     <div className="space-y-6">
