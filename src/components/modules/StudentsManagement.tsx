@@ -62,7 +62,7 @@ import {
 import { useFinanceConfig } from "@/hooks/useFinanceConfig";
 import { useAcademicCalendar } from "@/hooks/useAcademicCalendar";
 import { Pager, usePaged } from "@/components/portal/Paged";
-import { PaymentStatus } from "@/lib/finance";
+import type { PaymentStatus } from "@/lib/students";
 
 type OverviewData = Awaited<ReturnType<typeof getStudentsOverview>>;
 type StudentRow = OverviewData["students"][number];
@@ -297,7 +297,7 @@ export function StudentsManagement() {
             <Button variant="outline" size="sm" onClick={() => refreshOverview()}>
               <RefreshCw className="mr-2 size-4" /> Refresh
             </Button>
-            {data?.userScope.isAdmin && (
+            {data?.userScope?.isAdmin && (
               <>
                 <Button size="sm" variant="secondary" onClick={() => setClassDialogOpen(true)}>
                   Change Class

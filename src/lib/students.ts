@@ -4,7 +4,9 @@
  * Operations rules (operations-rules.ts), Academic rules, and Finance.
  * ------------------------------------------------------------------ */
 
-import { calculatePaymentStatus, PaymentStatus } from "@/lib/finance";
+import type { Json } from "@/integrations/supabase/types";
+
+export type PaymentStatus = "paid" | "partially_paid" | "overdue" | "pending";
 import { PeopleRules, peopleNum } from "@/lib/people-rules";
 import { OpsRules, opsValue } from "@/lib/operations-rules";
 
@@ -94,7 +96,14 @@ export function summariseStudentFinance(
   }
 
   const balance = totalDue - totalPaid;
-  const paymentStatus = calculatePaymentStatus(totalPaid, totalDue, oldestDueDate);
+  const paymentStatus: PaymentStatus =
+      totalPaid >= totalDue
+        ? "paid"
+        : totalPaid > 0
+          ? "partially_paid"
+          : oldestDueDate && oldestDueDate < new Date().toISOString().slice(0, 10)
+            ? "overdue"
+            : "pending";
 
   return {
     totalDue,
@@ -148,7 +157,7 @@ export function summariseStudentAcademics(
 export interface StudentOperationsSummary {
   currentExeatStatus: "in_school" | "out";
   totalExeats: number;
-  lastExeat: Record<string, unknown> | null;
+  lastExeat: Record<string, Json> | null;
   libraryLoanDays: number;
   libraryMaxLoans: number;
   libraryFinePerDay: number;
@@ -162,7 +171,7 @@ export interface StudentOperationsSummary {
  * Summarises student exeat status, library loans, reservations, and library policies from Operations Configuration.
  */
 export function summariseStudentOperations(
-  exeatLogs: Array<Record<string, unknown>>,
+  exeatLogs: Array<Record<string, Json>>,
   opsRules: OpsRules,
   libraryLoans: Array<{ status?: string; fine_amount?: number | string | null }> = [],
   libraryReservations: Array<{ status?: string }> = [],

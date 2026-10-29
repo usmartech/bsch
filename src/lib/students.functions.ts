@@ -14,6 +14,7 @@ import {
   updateStudentDetailSchema,
 } from "@/lib/students.schemas";
 import {
+import type { Json } from "@/integrations/supabase/types";
   evaluateStudentLifecycle,
   summariseStudentAcademics,
   summariseStudentFinance,
@@ -223,7 +224,7 @@ export const getStudentFullDetail = createServerFn({ method: "POST" })
       supabase.from("library_reservations").select("*, library_books(title, author)").eq("borrower_admission_id", data.id).order("reserved_at", { ascending: false }),
       supabase.from("assignment_submissions").select("id, assignment_id, final_score, submitted_at, graded_at").eq("admission_id", data.id),
       admission.student_profile_id
-        ? supabase.from("lesson_completions").select("id, lesson_id, quiz_score, completed_at").eq("student_id", admission.student_profile_id)
+        ? supabase.from("lesson_completions").select("id, lesson_id, quiz_submission_id, completed_at").eq("student_id", admission.student_profile_id)
         : Promise.resolve({ data: [] }),
       admission.student_profile_id
         ? supabase.from("exam_submissions").select("id, exam_id, total_score, submitted_at").eq("student_id", admission.student_profile_id)
@@ -273,9 +274,9 @@ export const getStudentFullDetail = createServerFn({ method: "POST" })
     const feesList = feesRes.data ?? [];
     const financialSummary = summariseStudentFinance(feesList as any[]);
 
-    const exeatList = (exeatRes.data ?? []) as Array<Record<string, unknown>>;
-    const libraryLoansList = (libraryLoansRes.data ?? []) as Array<Record<string, unknown>>;
-    const libraryReservationsList = (libraryReservationsRes.data ?? []) as Array<Record<string, unknown>>;
+    const exeatList = (exeatRes.data ?? []) as Array<Record<string, Json>>;
+    const libraryLoansList = (libraryLoansRes.data ?? []) as Array<Record<string, Json>>;
+    const libraryReservationsList = (libraryReservationsRes.data ?? []) as Array<Record<string, Json>>;
 
     const operationsSummary = summariseStudentOperations(
       exeatList,
@@ -392,7 +393,7 @@ export const updateStudentDetail = createServerFn({ method: "POST" })
         .update({
           full_name: data.parentName,
           email: data.parentEmail.trim().toLowerCase(),
-          phone: data.parentPhone,
+          phone: data.parentPhone ?? null,
         })
         .eq("id", current.parent_profile_id);
     }
@@ -466,7 +467,7 @@ export const recordStudentExeat = createServerFn({ method: "POST" })
       admission_id: data.admissionId,
       status: data.status,
       reason: data.reason,
-      destination: data.destination || null,
+      destination: data.destination,
       signed_by_name: actor?.full_name ?? "",
       signed_by_id: userId,
       departed_at: data.status === "out" ? new Date().toISOString() : null,
