@@ -169,12 +169,14 @@ export function FeesInvoicingManagement() {
     setExecutingRun(true);
     try {
       const res = await executeBillingRun({
+        data: {
         academicYear: billingAcademicYear,
         period: billingPeriod,
         targetScope: billingScope,
         targetValue: billingTargetValue,
         dueDate: billingDueDate || null,
         notes: billingNotes,
+        },
       });
       toast.success(
         `Billing run executed successfully! Billed ${res.studentsBilled} students for total of ${finConfig.money(res.totalBilled)}.`,
@@ -201,12 +203,14 @@ export function FeesInvoicingManagement() {
     setRecordingPayment(true);
     try {
       await recordFeePayment({
+        data: {
         feeId: selectedFeeRecord.id,
         amountPaid: amount,
         paymentMethod,
         reference: paymentReference,
         entryDate: paymentDate,
         postToIncome,
+        },
       });
       toast.success(`Recorded payment of ${finConfig.money(amount)} successfully.`);
       setIsPaymentOpen(false);
@@ -237,10 +241,12 @@ export function FeesInvoicingManagement() {
     setApplyingAdjustment(true);
     try {
       await applyFeeAdjustment({
+        data: {
         feeId: selectedFeeRecord.id,
         adjustmentType,
         amount,
         reason: adjustmentReason,
+        },
       });
       toast.success(`Applied ${adjustmentType} of ${finConfig.money(amount)} successfully.`);
       setIsAdjustmentOpen(false);
@@ -1126,7 +1132,13 @@ export function FeesInvoicingManagement() {
           )}
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => window.print()}>
+            <Button
+                variant="outline"
+                onClick={(event) => {
+                  const element = event.currentTarget.closest<HTMLElement>('[role="dialog"]');
+                  if (element) printDocument(element, "Billing");
+                }}
+              >
               <Printer className="size-4 mr-1.5" />
               Print Statement
             </Button>
