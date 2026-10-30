@@ -1,4 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
+import { createClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { resolveProvisionedSchool } from "@/lib/school.server";
 import { OPS_FEATURE_KEY, parseOpsRules } from "@/lib/operations-rules";
@@ -486,8 +488,19 @@ export const deletePublicityMediaGallery = createServerFn({ method: "POST" })
 // PUBLIC LANDING DATA FETCH
 // ----------------------------------------------------------------------
 
-export const getPublicLandingData = createServerFn({ method: "GET" }).handler(async ({ context }) => {
-  const { supabase } = context;
+export const getPublicLandingData = createServerFn({ method: "GET" }).handler(async () => {
+  // Public landing page: anonymous publishable client, published rows only (RLS).
+  const url = process.env["SUPABASE_URL"]!;
+  const key = (process.env["SUPABASE_PUBLISHABLE_KEY"] ?? process.env["SUPABASE_ANON_KEY"])!;
+  const supabase = createClient<Database>(url, key, {
+    auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
+    global: { fetch: (input, init) => {
+      const h = new Headers(init?.headers);
+      if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization");
+      h.set("apikey", key);
+      return fetch(input, { ...init, headers: h });
+    } },
+  });
 
   const [noticesRes, circularsRes, bannersRes, articlesRes, galleryRes] = await Promise.all([
     supabase

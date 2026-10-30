@@ -1460,7 +1460,7 @@ export function LibraryManagement() {
               </div>
 
               <div className="space-y-2">
-                <Label>Fine Amount to Charge ({financeConfig.currencyFallback.code})</Label>
+                <Label>Fine Amount to Charge ({financeConfig.symbol})</Label>
                 <Input
                   type="number"
                   min={0}

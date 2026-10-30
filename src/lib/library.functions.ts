@@ -234,7 +234,7 @@ export const saveLibraryBook = createServerFn({ method: "POST" })
     const school = await resolveProvisionedSchool(context.supabase);
 
     const row = {
-      school_id: school?.id,
+      school_id: school?.id ?? null,
       isbn: data.isbn,
       title: data.title,
       author: data.author,
@@ -408,6 +408,7 @@ export const autoPopulateBorrowerInfo = createServerFn({ method: "GET" })
 
         const activeLoansByStaff = new Map<string, number>();
         (activeLoans ?? []).forEach((l) => {
+          if (!l.borrower_profile_id) return;
           const count = activeLoansByStaff.get(l.borrower_profile_id) || 0;
           activeLoansByStaff.set(l.borrower_profile_id, count + 1);
         });
@@ -572,7 +573,7 @@ export const issueLibraryLoan = createServerFn({ method: "POST" })
 
     // 3. Insert loan record
     const loanRow = {
-      school_id: school?.id,
+      school_id: school?.id ?? null,
       book_id: data.bookId,
       borrower_type: data.borrowerType,
       borrower_profile_id: data.borrowerProfileId || null,
@@ -801,7 +802,7 @@ export const reserveLibraryBook = createServerFn({ method: "POST" })
       : context.userId;
 
     const row = {
-      school_id: school?.id,
+      school_id: school?.id ?? null,
       book_id: data.bookId,
       borrower_profile_id: borrowerProfileId,
       borrower_admission_id: isStaffOrAdminUser ? data.borrowerAdmissionId || null : null,

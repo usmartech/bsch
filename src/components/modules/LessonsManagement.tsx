@@ -234,8 +234,7 @@ export function LessonsManagement() {
     if (cls && subj) {
       try {
         const quizzes = await listAvailableQuizzes({
-          className: cls,
-          subject: subj,
+          data: { className: cls, subject: subj },
         });
         setAvailableQuizzes(quizzes);
       } catch (e) {
@@ -251,8 +250,7 @@ export function LessonsManagement() {
     setFormSubject(newSubject);
     try {
       const quizzes = await listAvailableQuizzes({
-        className: newClass,
-        subject: newSubject,
+        data: { className: newClass, subject: newSubject },
       });
       setAvailableQuizzes(quizzes);
     } catch (e) {
