@@ -234,8 +234,7 @@ export function LessonsManagement() {
     if (cls && subj) {
       try {
         const quizzes = await listAvailableQuizzes({
-          className: cls,
-          subject: subj,
+          data: { className: cls, subject: subj },
         });
         setAvailableQuizzes(quizzes);
       } catch (e) {
@@ -251,8 +250,7 @@ export function LessonsManagement() {
     setFormSubject(newSubject);
     try {
       const quizzes = await listAvailableQuizzes({
-        className: newClass,
-        subject: newSubject,
+        data: { className: newClass, subject: newSubject },
       });
       setAvailableQuizzes(quizzes);
     } catch (e) {
@@ -303,7 +301,7 @@ export function LessonsManagement() {
 
       toast.success(formId ? "Lesson updated successfully" : "Lesson created successfully");
       setIsCreateOpen(false);
-      fetchLessons();
+      fetchLessonsAndScope();
     } catch (err: any) {
       toast.error(err.message || "Failed to save lesson");
     }
@@ -315,7 +313,7 @@ export function LessonsManagement() {
       await deleteLesson({ data: { id } });
       toast.success("Lesson deleted successfully");
       if (activeLesson?.id === id) setActiveLesson(null);
-      fetchLessons();
+      fetchLessonsAndScope();
     } catch (err: any) {
       toast.error(err.message || "Failed to delete lesson");
     }
@@ -341,7 +339,7 @@ export function LessonsManagement() {
       });
       toast.success("Congratulations! Lesson marked as completed 🎉");
       setActiveLesson({ ...activeLesson, isCompleted: true });
-      fetchLessons();
+      fetchLessonsAndScope();
     } catch (err: any) {
       toast.error(err.message || "Could not complete lesson");
     }
@@ -618,7 +616,7 @@ export function LessonsManagement() {
 
                     {activeLesson.videoMeta.type === "youtube" ||
                     activeLesson.videoMeta.type === "vimeo" ? (
-                      <div className="aspect-video w-full overflow-hidden rounded-xl border border-border bg-black">
+                      <div className="aspect-video w-full overflow-hidden rounded-xl border border-border bg-muted">
                         <iframe
                           src={activeLesson.videoMeta.embedUrl}
                           className="h-full w-full"
@@ -628,7 +626,7 @@ export function LessonsManagement() {
                         />
                       </div>
                     ) : (
-                      <div className="aspect-video w-full overflow-hidden rounded-xl border border-border bg-black flex items-center justify-center">
+                      <div className="aspect-video w-full overflow-hidden rounded-xl border border-border bg-muted flex items-center justify-center">
                         <video
                           src={activeLesson.videoMeta.embedUrl}
                           controls
@@ -914,7 +912,7 @@ export function LessonsManagement() {
                           value={q.questionText}
                           onChange={(e) => {
                             const updated = [...quizQuestions];
-                            updated[idx].questionText = e.target.value;
+                            updated[idx]!.questionText = e.target.value;
                             setQuizQuestions(updated);
                           }}
                         />
@@ -924,7 +922,7 @@ export function LessonsManagement() {
                             value={q.correctAnswer}
                             onChange={(e) => {
                               const updated = [...quizQuestions];
-                              updated[idx].correctAnswer = e.target.value;
+                              updated[idx]!.correctAnswer = e.target.value;
                               setQuizQuestions(updated);
                             }}
                           />
@@ -934,7 +932,7 @@ export function LessonsManagement() {
                             value={q.points}
                             onChange={(e) => {
                               const updated = [...quizQuestions];
-                              updated[idx].points = Number(e.target.value);
+                              updated[idx]!.points = Number(e.target.value);
                               setQuizQuestions(updated);
                             }}
                           />

@@ -10,13 +10,14 @@ import { z } from "zod";
 
 export const OPS_FEATURE_KEY = "__operations_rules";
 
-export const OPS_SECTIONS = ["admissions", "library", "messaging"] as const;
+export const OPS_SECTIONS = ["admissions", "library", "messaging", "publicity"] as const;
 export type OpsSection = (typeof OPS_SECTIONS)[number];
 
 export const OPS_SECTION_LABEL: Record<OpsSection, { title: string; summary: string; modules: string[] }> = {
   admissions: { title: "Admissions process", summary: "Application steps, documents and numbering.", modules: ["admissions"] },
   library: { title: "Library policies", summary: "Loan periods, limits and fines.", modules: ["library"] },
   messaging: { title: "Messaging channels", summary: "Announcement audiences and channels.", modules: ["messaging", "dashboard"] },
+  publicity: { title: "Publicity & landing page", summary: "Notice retention, banners and published content.", modules: ["publicity"] },
 };
 
 const ruleSchema = z.object({
@@ -43,6 +44,7 @@ export const opsRulesSchema = z
     admissions: z.array(ruleSchema).max(30),
     library: z.array(ruleSchema).max(30),
     messaging: z.array(ruleSchema).max(30),
+    publicity: z.array(ruleSchema).max(30),
   })
   .refine((r) => OPS_LISTS.every((k) => unique(r[k])), { message: "List items must be unique" })
   .refine((r) => OPS_SECTIONS.every((s) => new Set(r[s].map((x) => x.key)).size === r[s].length), {
@@ -74,6 +76,11 @@ export const DEFAULT_OPS_RULES: Record<OpsSection, OpsRule[]> = {
     { key: "max-length", label: "Maximum message length", value: 2000, unit: "chars" },
     { key: "announcement-days", label: "Announcements stay visible for", value: 30, unit: "days" },
   ],
+  publicity: [
+    { key: "notice-retention-days", label: "Notices stay on the notice board for", value: 90, unit: "days" },
+    { key: "max-banner-slides", label: "Maximum landing page banner slides", value: 10 },
+    { key: "show-gallery", label: "Show the media gallery on the landing page", value: true },
+  ],
 };
 
 export function defaultOpsRules(): OpsRules {
@@ -86,6 +93,7 @@ export function defaultOpsRules(): OpsRules {
     admissions: DEFAULT_OPS_RULES.admissions.map((r) => ({ ...r })),
     library: DEFAULT_OPS_RULES.library.map((r) => ({ ...r })),
     messaging: DEFAULT_OPS_RULES.messaging.map((r) => ({ ...r })),
+    publicity: DEFAULT_OPS_RULES.publicity.map((r) => ({ ...r })),
   };
 }
 
