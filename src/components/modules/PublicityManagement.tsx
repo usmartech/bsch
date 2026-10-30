@@ -1691,7 +1691,7 @@ function PublicPreviewSection({ notices, circulars, banners, articles, gallery }
 
       {/* HERO BANNER SLIDESHOW PREVIEW */}
       {activeSlides.length > 0 ? (
-        <div className="relative overflow-hidden rounded-xl bg-slate-900 text-white min-h-[340px] flex items-center justify-center group">
+        <div className="relative overflow-hidden rounded-xl bg-muted text-primary-foreground min-h-[340px] flex items-center justify-center group">
           {activeSlides[currentSlideIndex] && (
             <div className="absolute inset-0">
               <img
@@ -1714,7 +1714,7 @@ function PublicPreviewSection({ notices, circulars, banners, articles, gallery }
 
           <div className="relative z-10 p-8 text-center max-w-2xl space-y-3">
             {activeSlides[currentSlideIndex]?.caption && (
-              <Badge variant="secondary" className="bg-white/20 text-white border-none">
+              <Badge variant="secondary" className="bg-primary/20 text-primary-foreground border-none">
                 {activeSlides[currentSlideIndex]?.caption}
               </Badge>
             )}
@@ -1735,7 +1735,7 @@ function PublicPreviewSection({ notices, circulars, banners, articles, gallery }
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute left-3 z-20 text-white bg-black/30 hover:bg-black/60 rounded-full"
+                className="absolute left-3 z-20 text-primary-foreground bg-primary/30 hover:bg-primary/60 rounded-full"
                 onClick={() => setCurrentSlideIndex((prev) => (prev - 1 + activeSlides.length) % activeSlides.length)}
               >
                 <ChevronLeft className="size-6" />
@@ -1743,7 +1743,7 @@ function PublicPreviewSection({ notices, circulars, banners, articles, gallery }
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute right-3 z-20 text-white bg-black/30 hover:bg-black/60 rounded-full"
+                className="absolute right-3 z-20 text-primary-foreground bg-primary/30 hover:bg-primary/60 rounded-full"
                 onClick={() => setCurrentSlideIndex((prev) => (prev + 1) % activeSlides.length)}
               >
                 <ChevronRight className="size-6" />
@@ -1755,7 +1755,7 @@ function PublicPreviewSection({ notices, circulars, banners, articles, gallery }
             <Button
               variant="ghost"
               size="icon"
-              className="absolute top-3 right-3 z-20 text-white bg-black/30 hover:bg-black/60 rounded-full size-8"
+              className="absolute top-3 right-3 z-20 text-primary-foreground bg-primary/30 hover:bg-primary/60 rounded-full size-8"
               onClick={() => setIsPlaying(!isPlaying)}
             >
               {isPlaying ? <Pause className="size-4" /> : <Play className="size-4" />}
@@ -1768,7 +1768,7 @@ function PublicPreviewSection({ notices, circulars, banners, articles, gallery }
                 <button
                   key={i}
                   onClick={() => setCurrentSlideIndex(i)}
-                  className={`size-2.5 rounded-full transition-all ${i === currentSlideIndex ? "bg-white w-6" : "bg-white/50"}`}
+                  className={`size-2.5 rounded-full transition-all ${i === currentSlideIndex ? "bg-primary w-6" : "bg-primary/50"}`}
                 />
               ))}
             </div>

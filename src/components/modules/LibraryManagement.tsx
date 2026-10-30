@@ -1144,7 +1144,7 @@ export function LibraryManagement() {
                 </div>
                 {isAdminOrStaff && (
                   <Button variant="outline" size="sm" asChild className="gap-2">
-                    <Link to="/portal/operations-configuration">
+                    <Link to="/portal/$moduleId" params={{ moduleId: "operations-configuration" }}>
                       <Sliders className="size-4" /> Edit Rules in Configuration
                     </Link>
                   </Button>
@@ -1460,7 +1460,7 @@ export function LibraryManagement() {
               </div>
 
               <div className="space-y-2">
-                <Label>Fine Amount to Charge ({financeConfig.currency})</Label>
+                <Label>Fine Amount to Charge ({financeConfig.currencyFallback.code})</Label>
                 <Input
                   type="number"
                   min={0}

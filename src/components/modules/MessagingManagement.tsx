@@ -158,7 +158,7 @@ export function MessagingManagement() {
       setRecipients(recList);
 
       if (convList.length > 0 && !activeConvId) {
-        setActiveConvId(convList[0].id);
+        setActiveConvId(convList[0]!.id);
       }
     } catch (err: any) {
       toast.error(err.message || "Failed to load messaging data");
@@ -342,7 +342,7 @@ export function MessagingManagement() {
       setSelectedRecipientId("");
       setConvTitle("");
       await loadAllData();
-      setActiveConvId(conv.id);
+      if (conv) setActiveConvId(conv.id);
     } catch (err: any) {
       toast.error(err.message || "Failed to start conversation");
     }
@@ -989,7 +989,7 @@ export function MessagingManagement() {
                   </span>
                 </div>
                 <Button variant="outline" size="sm" asChild className="gap-1.5 shrink-0">
-                  <Link to="/portal/operations-configuration">
+                  <Link to="/portal/$moduleId" params={{ moduleId: "operations-configuration" }}>
                     <ExternalLink className="size-3.5" /> Operations Configuration
                   </Link>
                 </Button>

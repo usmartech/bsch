@@ -29,7 +29,13 @@ export async function loadOpsRules(supabase: any) {
 export const getPublicityNotices = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { supabase, profile } = context;
+    const { supabase, userId } = context;
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, role, full_name, email")
+      .eq("id", userId)
+      .single();
+    if (profileError || !profile) throw new Error("Unable to load caller profile.");
     const { data, error } = await supabase
       .from("publicity_notices")
       .select("*")
@@ -45,11 +51,17 @@ export const upsertPublicityNotice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d: unknown) => noticeSchema.parse(d))
   .handler(async ({ context, data }) => {
-    const { supabase, profile } = context;
+    const { supabase, userId } = context;
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, role, full_name, email")
+      .eq("id", userId)
+      .single();
+    if (profileError || !profile) throw new Error("Unable to load caller profile.");
     if (profile.role !== "super_admin" && profile.role !== "school_manager" && profile.role !== "staff") {
       throw new Error("Unauthorized to modify publicity notices");
     }
-    const school = await resolveProvisionedSchool(supabase, profile);
+    const school = await resolveProvisionedSchool(supabase);
 
     const payload = {
       title: data.title,
@@ -93,7 +105,13 @@ export const deletePublicityNotice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d: unknown) => z.object({ id: z.string() }).parse(d))
   .handler(async ({ context, data }) => {
-    const { supabase, profile } = context;
+    const { supabase, userId } = context;
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, role, full_name, email")
+      .eq("id", userId)
+      .single();
+    if (profileError || !profile) throw new Error("Unable to load caller profile.");
     if (profile.role !== "super_admin" && profile.role !== "school_manager" && profile.role !== "staff") {
       throw new Error("Unauthorized to delete publicity notices");
     }
@@ -123,11 +141,17 @@ export const upsertPublicityCircular = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d: unknown) => circularSchema.parse(d))
   .handler(async ({ context, data }) => {
-    const { supabase, profile } = context;
+    const { supabase, userId } = context;
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, role, full_name, email")
+      .eq("id", userId)
+      .single();
+    if (profileError || !profile) throw new Error("Unable to load caller profile.");
     if (profile.role !== "super_admin" && profile.role !== "school_manager" && profile.role !== "staff") {
       throw new Error("Unauthorized to modify circulars");
     }
-    const school = await resolveProvisionedSchool(supabase, profile);
+    const school = await resolveProvisionedSchool(supabase);
 
     const payload = {
       reference_number: data.referenceNumber,
@@ -172,7 +196,13 @@ export const deletePublicityCircular = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d: unknown) => z.object({ id: z.string() }).parse(d))
   .handler(async ({ context, data }) => {
-    const { supabase, profile } = context;
+    const { supabase, userId } = context;
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, role, full_name, email")
+      .eq("id", userId)
+      .single();
+    if (profileError || !profile) throw new Error("Unable to load caller profile.");
     if (profile.role !== "super_admin" && profile.role !== "school_manager" && profile.role !== "staff") {
       throw new Error("Unauthorized to delete circulars");
     }
@@ -202,11 +232,17 @@ export const upsertPublicityBanner = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d: unknown) => bannerSchema.parse(d))
   .handler(async ({ context, data }) => {
-    const { supabase, profile } = context;
+    const { supabase, userId } = context;
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, role, full_name, email")
+      .eq("id", userId)
+      .single();
+    if (profileError || !profile) throw new Error("Unable to load caller profile.");
     if (profile.role !== "super_admin" && profile.role !== "school_manager" && profile.role !== "staff") {
       throw new Error("Unauthorized to modify banners");
     }
-    const school = await resolveProvisionedSchool(supabase, profile);
+    const school = await resolveProvisionedSchool(supabase);
 
     const payload = {
       title: data.title,
@@ -248,7 +284,13 @@ export const deletePublicityBanner = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d: unknown) => z.object({ id: z.string() }).parse(d))
   .handler(async ({ context, data }) => {
-    const { supabase, profile } = context;
+    const { supabase, userId } = context;
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, role, full_name, email")
+      .eq("id", userId)
+      .single();
+    if (profileError || !profile) throw new Error("Unable to load caller profile.");
     if (profile.role !== "super_admin" && profile.role !== "school_manager" && profile.role !== "staff") {
       throw new Error("Unauthorized to delete banners");
     }
@@ -278,11 +320,17 @@ export const upsertPublicityArticle = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d: unknown) => articleSchema.parse(d))
   .handler(async ({ context, data }) => {
-    const { supabase, profile } = context;
+    const { supabase, userId } = context;
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, role, full_name, email")
+      .eq("id", userId)
+      .single();
+    if (profileError || !profile) throw new Error("Unable to load caller profile.");
     if (profile.role !== "super_admin" && profile.role !== "school_manager" && profile.role !== "staff") {
       throw new Error("Unauthorized to modify articles");
     }
-    const school = await resolveProvisionedSchool(supabase, profile);
+    const school = await resolveProvisionedSchool(supabase);
 
     const payload = {
       title: data.title,
@@ -333,7 +381,13 @@ export const deletePublicityArticle = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d: unknown) => z.object({ id: z.string() }).parse(d))
   .handler(async ({ context, data }) => {
-    const { supabase, profile } = context;
+    const { supabase, userId } = context;
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, role, full_name, email")
+      .eq("id", userId)
+      .single();
+    if (profileError || !profile) throw new Error("Unable to load caller profile.");
     if (profile.role !== "super_admin" && profile.role !== "school_manager" && profile.role !== "staff") {
       throw new Error("Unauthorized to delete articles");
     }
@@ -363,11 +417,17 @@ export const upsertPublicityMediaGallery = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d: unknown) => mediaGallerySchema.parse(d))
   .handler(async ({ context, data }) => {
-    const { supabase, profile } = context;
+    const { supabase, userId } = context;
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, role, full_name, email")
+      .eq("id", userId)
+      .single();
+    if (profileError || !profile) throw new Error("Unable to load caller profile.");
     if (profile.role !== "super_admin" && profile.role !== "school_manager" && profile.role !== "staff") {
       throw new Error("Unauthorized to modify media gallery");
     }
-    const school = await resolveProvisionedSchool(supabase, profile);
+    const school = await resolveProvisionedSchool(supabase);
 
     const payload = {
       title: data.title,
@@ -407,7 +467,13 @@ export const deletePublicityMediaGallery = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d: unknown) => z.object({ id: z.string() }).parse(d))
   .handler(async ({ context, data }) => {
-    const { supabase, profile } = context;
+    const { supabase, userId } = context;
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, role, full_name, email")
+      .eq("id", userId)
+      .single();
+    if (profileError || !profile) throw new Error("Unable to load caller profile.");
     if (profile.role !== "super_admin" && profile.role !== "school_manager" && profile.role !== "staff") {
       throw new Error("Unauthorized to delete media gallery items");
     }

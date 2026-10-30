@@ -17,14 +17,20 @@ import { z } from "zod";
 export const getMessagingConfigAndRules = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { supabase, profile } = context;
+    const { supabase, userId } = context;
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, role, full_name, email")
+      .eq("id", userId)
+      .single();
+    if (profileError || !profile) throw new Error("Unable to load caller profile.");
 
     const [{ data: tenantSettings }, { data: schoolClasses }] = await Promise.all([
       supabase.from("tenant_settings").select("features").maybeSingle(),
       supabase.from("school_classes").select("id, name, code, level_code").order("name"),
     ]);
 
-    const opsRaw = tenantSettings?.features?.[OPS_FEATURE_KEY] ?? null;
+    const opsRaw = (tenantSettings?.features as Record<string, unknown> | null)?.[OPS_FEATURE_KEY] ?? null;
     const policies = extractMessagingPolicies(opsRaw);
 
     return {
@@ -46,7 +52,13 @@ export const getMessagingConfigAndRules = createServerFn({ method: "GET" })
 export const getAnnouncements = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { supabase, profile } = context;
+    const { supabase, userId } = context;
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, role, full_name, email")
+      .eq("id", userId)
+      .single();
+    if (profileError || !profile) throw new Error("Unable to load caller profile.");
 
     const { data, error } = await supabase
       .from("messaging_announcements")
@@ -78,7 +90,13 @@ export const upsertAnnouncement = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d: unknown) => announcementSchema.parse(d))
   .handler(async ({ context, data }) => {
-    const { supabase, profile } = context;
+    const { supabase, userId } = context;
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, role, full_name, email")
+      .eq("id", userId)
+      .single();
+    if (profileError || !profile) throw new Error("Unable to load caller profile.");
     if (
       profile.role !== "super_admin" &&
       profile.role !== "school_manager" &&
@@ -87,7 +105,7 @@ export const upsertAnnouncement = createServerFn({ method: "POST" })
       throw new Error("Unauthorized to create or edit announcements.");
     }
 
-    const school = await resolveProvisionedSchool(supabase, profile);
+    const school = await resolveProvisionedSchool(supabase);
 
     const payload = {
       title: data.title,
@@ -132,7 +150,13 @@ export const deleteAnnouncement = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
-    const { supabase, profile } = context;
+    const { supabase, userId } = context;
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, role, full_name, email")
+      .eq("id", userId)
+      .single();
+    if (profileError || !profile) throw new Error("Unable to load caller profile.");
     if (
       profile.role !== "super_admin" &&
       profile.role !== "school_manager" &&
@@ -150,7 +174,13 @@ export const markAnnouncementRead = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d: unknown) => z.object({ announcementId: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
-    const { supabase, profile } = context;
+    const { supabase, userId } = context;
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, role, full_name, email")
+      .eq("id", userId)
+      .single();
+    if (profileError || !profile) throw new Error("Unable to load caller profile.");
 
     const { error } = await supabase.from("messaging_announcement_reads").upsert(
       {
@@ -172,7 +202,13 @@ export const markAnnouncementRead = createServerFn({ method: "POST" })
 export const getConversations = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { supabase, profile } = context;
+    const { supabase, userId } = context;
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, role, full_name, email")
+      .eq("id", userId)
+      .single();
+    if (profileError || !profile) throw new Error("Unable to load caller profile.");
 
     // Load conversations caller is participant in
     const { data: participantRows, error: partError } = await supabase
@@ -256,7 +292,13 @@ export const startConversation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d: unknown) => createConversationSchema.parse(d))
   .handler(async ({ context, data }) => {
-    const { supabase, profile } = context;
+    const { supabase, userId } = context;
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, role, full_name, email")
+      .eq("id", userId)
+      .single();
+    if (profileError || !profile) throw new Error("Unable to load caller profile.");
 
     // Enforce Operations Configuration rule for direct messages
     const { data: tenantSettings } = await supabase
@@ -264,7 +306,7 @@ export const startConversation = createServerFn({ method: "POST" })
       .select("features")
       .maybeSingle();
 
-    const opsRaw = tenantSettings?.features?.[OPS_FEATURE_KEY] ?? null;
+    const opsRaw = (tenantSettings?.features as Record<string, unknown> | null)?.[OPS_FEATURE_KEY] ?? null;
     const policies = extractMessagingPolicies(opsRaw);
 
     if (!policies.directMessagesEnabled) {
@@ -307,7 +349,7 @@ export const startConversation = createServerFn({ method: "POST" })
       }
     }
 
-    const school = await resolveProvisionedSchool(supabase, profile);
+    const school = await resolveProvisionedSchool(supabase);
 
     // Create conversation record
     const { data: conv, error: convErr } = await supabase
@@ -343,7 +385,13 @@ export const sendDirectMessage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d: unknown) => sendDirectMessageSchema.parse(d))
   .handler(async ({ context, data }) => {
-    const { supabase, profile } = context;
+    const { supabase, userId } = context;
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, role, full_name, email")
+      .eq("id", userId)
+      .single();
+    if (profileError || !profile) throw new Error("Unable to load caller profile.");
 
     // Load tenant rules to check direct-messages toggle & max-length limit
     const { data: tenantSettings } = await supabase
@@ -351,7 +399,7 @@ export const sendDirectMessage = createServerFn({ method: "POST" })
       .select("features")
       .maybeSingle();
 
-    const opsRaw = tenantSettings?.features?.[OPS_FEATURE_KEY] ?? null;
+    const opsRaw = (tenantSettings?.features as Record<string, unknown> | null)?.[OPS_FEATURE_KEY] ?? null;
     const policies = extractMessagingPolicies(opsRaw);
 
     if (!policies.directMessagesEnabled) {
@@ -404,7 +452,13 @@ export const markConversationRead = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d: unknown) => z.object({ conversationId: z.string().uuid() }).parse(d))
   .handler(async ({ context, data }) => {
-    const { supabase, profile } = context;
+    const { supabase, userId } = context;
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, role, full_name, email")
+      .eq("id", userId)
+      .single();
+    if (profileError || !profile) throw new Error("Unable to load caller profile.");
 
     const { error } = await supabase
       .from("messaging_conversation_participants")
@@ -423,7 +477,13 @@ export const markConversationRead = createServerFn({ method: "POST" })
 export const getEligibleRecipients = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { supabase, profile } = context;
+    const { supabase, userId } = context;
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, role, full_name, email")
+      .eq("id", userId)
+      .single();
+    if (profileError || !profile) throw new Error("Unable to load caller profile.");
 
     const { data: profiles, error } = await supabase
       .from("profiles")

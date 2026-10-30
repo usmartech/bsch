@@ -1,6 +1,18 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { assertStaffOrAdmin, isStaffOrAdmin, logAudit } from "@/lib/admin.server";
+import { getRoles, logAudit } from "@/lib/admin.server";
+
+/** Staff-or-admin gate for library desk operations. */
+async function isStaffOrAdmin(supabase: any, userId: string): Promise<boolean> {
+  const roles = await getRoles(supabase, userId);
+  return roles.some((r) => ["super_admin", "school_manager", "staff"].includes(r));
+}
+
+async function assertStaffOrAdmin(supabase: any, userId: string): Promise<void> {
+  if (!(await isStaffOrAdmin(supabase, userId))) {
+    throw new Error("Staff or administrator access required.");
+  }
+}
 import { resolveProvisionedSchool } from "@/lib/school.server";
 import { OPS_FEATURE_KEY, parseOpsRules } from "@/lib/operations-rules";
 import {
@@ -24,7 +36,7 @@ import {
   reserveBookInputSchema,
   returnLoanInputSchema,
 } from "@/lib/library.schemas";
-import { calculatePaymentStatus } from "@/lib/finance";
+import { calculatePaymentStatus } from "@/lib/fees-invoicing";
 
 export async function loadOpsRules(supabase: any) {
   const { data } = await supabase
@@ -71,7 +83,7 @@ export const getLibraryOverviewStats = createServerFn({ method: "GET" })
     const totalCopies = books.reduce((acc, b) => acc + (b.total_copies || 0), 0);
     const availableCopies = books.reduce((acc, b) => acc + (b.available_copies || 0), 0);
     const activeLoans = loans.filter((l) => l.status === "issued" || l.status === "overdue").length;
-    const todayStr = new Date().toISOString().split("T")[0];
+    const todayStr = new Date().toISOString().slice(0, 10);
     const overdueLoans = loans.filter(
       (l) => l.status === "overdue" || (l.status === "issued" && l.due_date < todayStr),
     ).length;
@@ -320,7 +332,7 @@ export const autoPopulateBorrowerInfo = createServerFn({ method: "GET" })
         .limit(10);
 
       if (school?.id) {
-        admissionsQuery = admissionsQuery.eq("school_id", school.id);
+
       }
 
       const { data: admissions } = await admissionsQuery;
@@ -346,13 +358,16 @@ export const autoPopulateBorrowerInfo = createServerFn({ method: "GET" })
 
         const activeLoansByAdmission = new Map<string, number>();
         (activeLoansRes.data ?? []).forEach((l) => {
+          if (!l.borrower_admission_id) return;
           const count = activeLoansByAdmission.get(l.borrower_admission_id) || 0;
           activeLoansByAdmission.set(l.borrower_admission_id, count + 1);
         });
 
         results.students = admissions.map((a) => {
           const studentFees = feesByAdmission.get(a.id) || [];
-          const paymentStatus = studentFees.length > 0 ? calculatePaymentStatus(studentFees) : "paid";
+          const totalDue = studentFees.reduce((s, f) => s + Number(f.amount_due ?? 0), 0);
+          const totalPaid = studentFees.reduce((s, f) => s + Number(f.amount_paid ?? 0), 0);
+          const paymentStatus = studentFees.length > 0 ? calculatePaymentStatus(totalPaid, totalDue, null) : "paid";
           const activeLoanCount = activeLoansByAdmission.get(a.id) || 0;
           const eligibility = checkBorrowerEligibility(activeLoanCount, policies.maxLoans, paymentStatus);
 
@@ -430,7 +445,7 @@ export const listLibraryLoans = createServerFn({ method: "GET" })
     const school = await resolveProvisionedSchool(supabase);
     const opsRules = await loadOpsRules(supabase);
     const policies = getLibraryPolicies(opsRules);
-    const todayStr = new Date().toISOString().split("T")[0];
+    const todayStr = new Date().toISOString().slice(0, 10);
 
     const isStaffOrAdminUser = await isStaffOrAdmin(supabase, context.userId);
 

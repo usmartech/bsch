@@ -183,7 +183,7 @@ export const saveLesson = createServerFn({ method: "POST" })
 
       // Insert quiz questions
       const questionRows = data.inlineQuiz.questions.map((q, idx) => ({
-        exam_id: assignedQuizId,
+        exam_id: insertedQuiz.id,
         question_text: q.questionText,
         question_type: q.questionType,
         points: q.points,
