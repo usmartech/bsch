@@ -152,7 +152,7 @@ export function TimetableManagement() {
 
       // Default class filter to first available class if present
       if (autoRes.classes && autoRes.classes.length > 0 && selectedClass === "all") {
-        setSelectedClass(autoRes.classes[0].name);
+        setSelectedClass(autoRes.classes[0]?.name);
       }
     } catch (err: any) {
       toast.error(err.message || "Failed to load timetable data.");
@@ -287,7 +287,8 @@ export function TimetableManagement() {
       )?.name || "";
 
       await saveTimetableSlot({
-        id: editingSlot?.id,
+        data: {
+        id: editingSlot?.id ?? undefined,
         term: activeTerm,
         className: formClassName,
         subject: formSubject,
@@ -301,6 +302,7 @@ export function TimetableManagement() {
         inlineQuiz: inlineQuizPayload,
         title: formTitle,
         description: formDescription,
+        },
       });
 
       toast.success(editingSlot ? "Timetable slot updated!" : "Timetable slot created!");
@@ -316,7 +318,7 @@ export function TimetableManagement() {
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this timetable slot?")) return;
     try {
-      await deleteTimetableSlot({ id });
+      await deleteTimetableSlot({ data: { id } });
       toast.success("Timetable slot removed.");
       await loadData();
     } catch (err: any) {
@@ -870,7 +872,7 @@ export function TimetableManagement() {
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-semibold">Questions ({inlineQuizQuestions.length})</span>
-                        <Button type="button" size="xs" variant="outline" onClick={addQuestion}>
+                        <Button type="button" size="sm" variant="outline" onClick={addQuestion}>
                           + Add Question
                         </Button>
                       </div>
@@ -890,7 +892,7 @@ export function TimetableManagement() {
                             value={q.questionText}
                             onChange={(e) => {
                               const updated = [...inlineQuizQuestions];
-                              updated[idx].questionText = e.target.value;
+                              updated[idx]!.questionText = e.target.value;
                               setInlineQuizQuestions(updated);
                             }}
                           />

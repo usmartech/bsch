@@ -116,15 +116,15 @@ describe("Results Pure Business Logic & Broadsheet Calculations", () => {
     expect(res.subjects).toEqual(["Mathematics", "English"]);
 
     const alice = res.students.find((s) => s.admissionId === "s1")!;
-    expect(alice.subjects.Mathematics.classWorkScore).toBe(40); // 80 * 0.5
-    expect(alice.subjects.Mathematics.examScore).toBe(45);      // 90 * 0.5
-    expect(alice.subjects.Mathematics.totalScore).toBe(85);     // 40 + 45
-    expect(alice.subjects.Mathematics.grade).toBe("A");          // 85 is min 80 -> A
-    expect(alice.subjects.Mathematics.position).toBe(1);
+    expect(alice.subjects["Mathematics"]!.classWorkScore).toBe(40); // 80 * 0.5
+    expect(alice.subjects["Mathematics"]!.examScore).toBe(45);      // 90 * 0.5
+    expect(alice.subjects["Mathematics"]!.totalScore).toBe(85);     // 40 + 45
+    expect(alice.subjects["Mathematics"]!.grade).toBe("A");          // 85 is min 80 -> A
+    expect(alice.subjects["Mathematics"]!.position).toBe(1);
 
     const bob = res.students.find((s) => s.admissionId === "s2")!;
-    expect(bob.subjects.Mathematics.totalScore).toBe(40);
-    expect(bob.subjects.Mathematics.position).toBe(2);
+    expect(bob.subjects["Mathematics"]!.totalScore).toBe(40);
+    expect(bob.subjects["Mathematics"]!.position).toBe(2);
     expect(bob.status).toBe("Fail");
   });
 
@@ -139,7 +139,7 @@ describe("Results Pure Business Logic & Broadsheet Calculations", () => {
       { status: "published", withheldStudentIds: [] },
     );
 
-    const mathStats = res.subjectStats["Mathematics"];
+    const mathStats = res.subjectStats["Mathematics"]!;
     expect(mathStats.averageScore).toBe(62.5); // (85 + 40)/2
     expect(mathStats.highestScore).toBe(85);
     expect(mathStats.lowestScore).toBe(40);
@@ -176,7 +176,7 @@ describe("Results Pure Business Logic & Broadsheet Calculations", () => {
 
     expect(res.gradeBands).toBeDefined();
     expect(res.gradeBands.length).toBeGreaterThan(0);
-    expect(res.gradeBands[0].grade).toBe("A+");
+    expect(res.gradeBands[0]!.grade).toBe("A+");
 
     expect(generatePrincipalRemark(92)).toContain("outstanding");
     expect(generatePrincipalRemark(82)).toContain("excellent");

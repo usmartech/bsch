@@ -222,8 +222,9 @@ export function AssignmentManagement() {
   }, []);
 
   useEffect(() => {
-    if (cal.current?.name && !form.term) {
-      setForm((f) => ({ ...f, term: cal.current.name }));
+    const currentName = cal.current?.name;
+    if (currentName && !form.term) {
+      setForm((f) => ({ ...f, term: currentName }));
     }
   }, [cal.current?.name]);
 
@@ -502,7 +503,7 @@ export function AssignmentManagement() {
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {pagedAssignments.items.map((item) => {
-                const status = getAssignmentStatus(item);
+                const status = getAssignmentStatus({ due_date: item.dueDate, cutoff_date: item.cutoffDate, allow_late: item.allowLate });
                 const isOverdue = status === "overdue";
                 const isClosed = status === "closed";
 
@@ -696,8 +697,8 @@ export function AssignmentManagement() {
                   >
                     <SelectTrigger><SelectValue placeholder="Select subject" /></SelectTrigger>
                     <SelectContent>
-                      {subjectOptions.map((x: string) => (
-                        <SelectItem key={x} value={x}>{x}</SelectItem>
+                      {subjectOptions.map((x: any) => (
+                        <SelectItem key={String(x)} value={String(x)}>{String(x)}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>

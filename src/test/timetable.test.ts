@@ -121,10 +121,10 @@ describe("Timetable Helpers & Academic Grid", () => {
     const grid = generateDailyGrid(rules, 4);
 
     expect(grid.length).toBe(9); // 8 lessons + 1 break
-    expect(grid[0].startTime).toBe("07:30");
-    expect(grid[0].endTime).toBe("08:10");
-    expect(grid[4].isBreak).toBe(true);
-    expect(grid[4].label).toBe("Break / Recess");
+    expect(grid[0]!.startTime).toBe("07:30");
+    expect(grid[0]!.endTime).toBe("08:10");
+    expect(grid[4]!.isBreak).toBe(true);
+    expect(grid[4]!.label).toBe("Break / Recess");
   });
 
   it("detects time overlap correctly", () => {

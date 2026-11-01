@@ -25,7 +25,7 @@ export function minutesToTime(totalMinutes: number): string {
 export function formatTime12h(timeStr: string): string {
   if (!timeStr) return "";
   const [hStr, mStr] = timeStr.split(":");
-  let h = parseInt(hStr, 10);
+  let h = parseInt(hStr ?? "", 10);
   if (isNaN(h)) return timeStr;
   const ampm = h >= 12 ? "PM" : "AM";
   h = h % 12;
@@ -102,7 +102,7 @@ export function checkTimeOverlap(
 export interface ConflictResult {
   hasConflict: boolean;
   conflictReason?: string;
-  conflictingSlot?: TimetableSlotInput;
+  conflictingSlot?: SlotTiming;
 }
 
 /**
@@ -111,9 +111,12 @@ export interface ConflictResult {
  * 2. Same teacher double-booked at the same day/time range.
  * 3. Same room double-booked at the same day/time range.
  */
+type SlotTiming = Partial<TimetableSlotInput> &
+  Pick<TimetableSlotInput, "term" | "className" | "dayOfWeek" | "startTime" | "endTime"> & { id?: string };
+
 export function checkSlotConflict(
-  newSlot: TimetableSlotInput,
-  existingSlots: (TimetableSlotInput & { id?: string })[],
+  newSlot: SlotTiming,
+  existingSlots: SlotTiming[],
 ): ConflictResult {
   for (const slot of existingSlots) {
     if (newSlot.id && slot.id && newSlot.id === slot.id) {

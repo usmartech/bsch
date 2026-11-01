@@ -88,8 +88,8 @@ export const timetableSlotInputSchema = z
   })
   .refine(
     (data) => {
-      const [startH, startM] = data.startTime.split(":").map(Number);
-      const [endH, endM] = data.endTime.split(":").map(Number);
+      const [startH = 0, startM = 0] = data.startTime.split(":").map(Number);
+      const [endH = 0, endM = 0] = data.endTime.split(":").map(Number);
       const startTotal = startH * 60 + startM;
       const endTotal = endH * 60 + endM;
       return endTotal > startTotal;

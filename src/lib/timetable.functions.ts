@@ -9,7 +9,6 @@ import {
   timetableSlotInputSchema,
 } from "@/lib/timetable.schemas";
 import { checkSlotConflict } from "@/lib/timetable";
-import { getSchoolClasses, getSubjectCatalog } from "@/lib/config.functions";
 
 /** Helper to find admission record for current student user. */
 async function findStudentAdmission(supabase: any, userId: string) {
@@ -100,9 +99,13 @@ export const getTimetableAutoPopulationData = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const scope = await loadTeachingScope(context.supabase, context.userId);
 
-    const [classes, subjectCatalog, rules, calendar, staffRes, assessmentRes] = await Promise.all([
-      getSchoolClasses({ context }),
-      getSubjectCatalog({ context }),
+    const [classesRes, subjectsRes, rules, calendar, staffRes, assessmentRes] = await Promise.all([
+      context.supabase
+        .from("school_classes")
+        .select("id, level_code, name, sort_order")
+        .eq("active", true)
+        .order("sort_order", { ascending: true }),
+      context.supabase.from("subjects").select("name, level_code, active").eq("active", true).order("name"),
       loadRules(context.supabase),
       loadCalendar(context.supabase),
       context.supabase
@@ -116,8 +119,13 @@ export const getTimetableAutoPopulationData = createServerFn({ method: "GET" })
         .order("created_at", { ascending: false }),
     ]);
 
+    if (classesRes.error) throw new Error(classesRes.error.message);
+    if (subjectsRes.error) throw new Error(subjectsRes.error.message);
     if (staffRes.error) throw new Error(staffRes.error.message);
     if (assessmentRes.error) throw new Error(assessmentRes.error.message);
+
+    const classes = (classesRes.data ?? []).map((c) => ({ id: c.id, name: c.name, levelCode: c.level_code }));
+    const subjectCatalog = (subjectsRes.data ?? []).map((s) => ({ name: s.name, levelCode: s.level_code }));
 
     const assessments = assessmentRes.data ?? [];
 
@@ -182,7 +190,7 @@ export const saveTimetableSlot = createServerFn({ method: "POST" })
     // Handle inline quiz creation if provided
     if (data.inlineQuiz) {
       const quizRow = {
-        school_id: school?.id,
+        school_id: school?.id ?? null,
         title: data.inlineQuiz.title,
         description: data.inlineQuiz.description,
         exam_type: "quiz",
@@ -208,7 +216,7 @@ export const saveTimetableSlot = createServerFn({ method: "POST" })
       assignedQuizId = insertedQuiz.id;
 
       const questionRows = data.inlineQuiz.questions.map((q, idx) => ({
-        exam_id: assignedQuizId,
+        exam_id: insertedQuiz.id,
         question_text: q.questionText,
         question_type: q.questionType,
         points: q.points,
@@ -223,7 +231,7 @@ export const saveTimetableSlot = createServerFn({ method: "POST" })
     }
 
     const slotRow = {
-      school_id: school?.id,
+      school_id: school?.id ?? null,
       term: data.term,
       class_name: data.className,
       subject: data.subject,
