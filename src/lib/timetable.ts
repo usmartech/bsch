@@ -112,7 +112,7 @@ export interface ConflictResult {
  * 3. Same room double-booked at the same day/time range.
  */
 type SlotTiming = Partial<TimetableSlotInput> &
-  Pick<TimetableSlotInput, "term" | "className" | "dayOfWeek" | "startTime" | "endTime"> & { id?: string };
+  Pick<TimetableSlotInput, "term" | "className" | "dayOfWeek" | "startTime" | "endTime"> & { id?: string | undefined };
 
 export function checkSlotConflict(
   newSlot: SlotTiming,

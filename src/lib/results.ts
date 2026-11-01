@@ -5,7 +5,7 @@ import { PublicationStatus } from "./results.schemas";
 export interface StudentScoreRecord {
   admissionId: string;
   studentName: string;
-  admissionNumber: string;
+  admissionNumber: string | null;
   subject: string;
   assessmentType: string;
   score: number;
@@ -25,7 +25,7 @@ export interface StudentSubjectSummary {
 export interface BroadsheetStudentRow {
   admissionId: string;
   studentName: string;
-  admissionNumber: string;
+  admissionNumber: string | null;
   subjects: Record<string, StudentSubjectSummary>;
   overallTotal: number;
   overallAverage: number;

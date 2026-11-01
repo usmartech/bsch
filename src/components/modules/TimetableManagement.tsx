@@ -152,7 +152,8 @@ export function TimetableManagement() {
 
       // Default class filter to first available class if present
       if (autoRes.classes && autoRes.classes.length > 0 && selectedClass === "all") {
-        setSelectedClass(autoRes.classes[0]?.name);
+        const firstClass = autoRes.classes[0]?.name;
+        if (firstClass) setSelectedClass(firstClass);
       }
     } catch (err: any) {
       toast.error(err.message || "Failed to load timetable data.");

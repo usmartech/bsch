@@ -190,7 +190,6 @@ export const saveTimetableSlot = createServerFn({ method: "POST" })
     // Handle inline quiz creation if provided
     if (data.inlineQuiz) {
       const quizRow = {
-        school_id: school?.id ?? null,
         title: data.inlineQuiz.title,
         description: data.inlineQuiz.description,
         exam_type: "quiz",
