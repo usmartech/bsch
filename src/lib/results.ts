@@ -5,7 +5,7 @@ import { PublicationStatus } from "./results.schemas";
 export interface StudentScoreRecord {
   admissionId: string;
   studentName: string;
-  admissionNumber: string;
+  admissionNumber: string | null;
   subject: string;
   assessmentType: string;
   score: number;
@@ -25,7 +25,7 @@ export interface StudentSubjectSummary {
 export interface BroadsheetStudentRow {
   admissionId: string;
   studentName: string;
-  admissionNumber: string;
+  admissionNumber: string | null;
   subjects: Record<string, StudentSubjectSummary>;
   overallTotal: number;
   overallAverage: number;
@@ -85,7 +85,7 @@ export function generatePrincipalRemark(overallAverage: number, passMark: number
 export function calculateBroadsheetMatrix(
   term: string,
   className: string,
-  students: { id: string; student_name: string; admission_number: string }[],
+  students: { id: string; student_name: string; admission_number: string | null }[],
   subjectList: string[],
   scores: StudentScoreRecord[],
   rules: AcademicRules,
@@ -165,9 +165,9 @@ export function calculateBroadsheetMatrix(
   for (const student of students) {
     const studentSubjects = studentSummariesMap.get(student.id)!;
     for (const sub of subjectList) {
-      const subTotal = studentSubjects[sub].totalScore;
+      const subTotal = studentSubjects[sub]!.totalScore;
       const allTotals = subjectTotalsMap.get(sub) ?? [];
-      studentSubjects[sub].position = rankOf(subTotal, allTotals);
+      studentSubjects[sub]!.position = rankOf(subTotal, allTotals);
     }
   }
 
@@ -180,7 +180,7 @@ export function calculateBroadsheetMatrix(
   const studentRows: BroadsheetStudentRow[] = students.map((st, idx) => {
     const subs = studentSummariesMap.get(st.id)!;
     const studentSubValues = Object.values(subs);
-    const overallTotal = overallTotals[idx];
+    const overallTotal = overallTotals[idx] ?? 0;
     const count = studentSubValues.length || 1;
     const overallAverage = Math.round((overallTotal / count) * 10) / 10;
     const pos = rankOf(overallTotal, overallTotals);

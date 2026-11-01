@@ -49,7 +49,7 @@ export function ResultsManagement() {
   if (!selectedClass && classOptions.length > 0) {
     // Pick first class if none selected
     const initial = classOptions[0];
-    if (initial) setSelectedClass(initial);
+    if (initial) setSelectedClass(initial.name);
   }
 
   const isStaffOrAdmin =
@@ -166,8 +166,8 @@ export function ResultsManagement() {
                 </SelectTrigger>
                 <SelectContent>
                   {classOptions.map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {c}
+                    <SelectItem key={c.id} value={c.name}>
+                      {c.name}
                     </SelectItem>
                   ))}
                 </SelectContent>

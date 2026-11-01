@@ -155,8 +155,8 @@ export const getPerformanceTrackerOverview = createServerFn({ method: "GET" })
     const rawStudents: RawStudentData[] = filteredStudents.map((s) => ({
       id: s.id,
       studentName: s.student_name,
-      admissionNumber: s.admission_number,
-      className: s.class_admitted,
+      admissionNumber: s.admission_number ?? "",
+      className: s.class_admitted ?? "",
       gender: s.gender || "Other",
       educationLevel: classLevelMap.get(s.class_admitted.toLowerCase()) || "Primary",
     }));
@@ -396,8 +396,8 @@ export const getCrossAnalyticsData = createServerFn({ method: "GET" })
     const students: RawStudentData[] = (studentsRes.data ?? []).map((s) => ({
       id: s.id,
       studentName: s.student_name,
-      admissionNumber: s.admission_number,
-      className: s.class_admitted,
+      admissionNumber: s.admission_number ?? "",
+      className: s.class_admitted ?? "",
       gender: s.gender || "Other",
     }));
 
@@ -524,8 +524,8 @@ export const getAtRiskStudentsData = createServerFn({ method: "GET" })
     const students: RawStudentData[] = (studentsRes.data ?? []).map((s) => ({
       id: s.id,
       studentName: s.student_name,
-      admissionNumber: s.admission_number,
-      className: s.class_admitted,
+      admissionNumber: s.admission_number ?? "",
+      className: s.class_admitted ?? "",
       gender: s.gender || "Other",
     }));
 
@@ -817,7 +817,7 @@ export const updatePerformanceRiskRules = createServerFn({ method: "POST" })
       ...existingFeatures,
       [PERFORMANCE_RISK_RULES_FEATURE_KEY]: {
         ...data,
-        version: (Number(existingFeatures[PERFORMANCE_RISK_RULES_FEATURE_KEY]?.["version"] ?? 0)) + 1,
+        version: (Number((existingFeatures[PERFORMANCE_RISK_RULES_FEATURE_KEY] as { version?: number } | undefined)?.version ?? 0)) + 1,
       },
     };
 

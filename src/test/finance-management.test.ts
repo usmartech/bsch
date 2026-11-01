@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { calculatePaymentStatus, FEE_STATUSES } from "@/lib/finance";
+import { FEE_STATUSES } from "@/lib/finance";
+import { calculatePaymentStatus } from "@/lib/fees-invoicing";
 import { feeSchema, feeUpdateSchema } from "@/lib/finance.schemas";
 
 describe("Financial Management payment status automation", () => {

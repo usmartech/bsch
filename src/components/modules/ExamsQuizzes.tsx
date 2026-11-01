@@ -398,7 +398,7 @@ function ExamBuilderForm({ initialData, onSaved }: { initialData?: any; onSaved:
     } else {
       if (periods.length > 0 && !term) {
         const activePeriod = periods.find((p) => p.status === "active") || periods[0];
-        setTerm(activePeriod.name);
+        if (activePeriod) setTerm(activePeriod.name);
       }
     }
   }, [initialData, periods]);
@@ -420,7 +420,7 @@ function ExamBuilderForm({ initialData, onSaved }: { initialData?: any; onSaved:
 
   const updateQuestion = (index: number, updated: Partial<QuestionInput>) => {
     const list = [...questions];
-    list[index] = { ...list[index], ...updated };
+    list[index] = { ...list[index]!, ...updated } as QuestionInput;
     setQuestions(list);
   };
 

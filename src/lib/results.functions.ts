@@ -109,10 +109,7 @@ export const getBroadsheetData = createServerFn({ method: "GET" })
         .select("id, student_name, admission_number, class_admitted")
         .eq("class_admitted", data.className)
         .order("student_name"),
-      supabase
-        .from("subjects")
-        .select("name, class_name")
-        .or(`class_name.eq.${data.className},class_name.eq.`),
+      supabase.from("subjects").select("name").eq("active", true),
       supabase
         .from("student_assessments")
         .select("admission_id, subject, assessment_type, score, out_of")
@@ -278,7 +275,6 @@ export const getStudentTranscript = createServerFn({ method: "GET" })
     // Fetch full broadsheet data for the student's class to derive transcript context
     const broadsheetResult = await getBroadsheetData({
       data: { term: data.term, className: student.class_admitted },
-      context,
     });
 
     const studentRow = broadsheetResult.broadsheet.students.find(

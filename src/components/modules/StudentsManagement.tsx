@@ -838,7 +838,7 @@ function StudentDetailView({
               <h3 className="font-semibold border-b pb-2">Student Personal Info</h3>
               <dl className="grid gap-2 text-sm">
                 <Line label="Full Name" value={admission.student_name} />
-                <Line label="Admission Number" value={admission.admission_number} />
+                <Line label="Admission Number" value={admission.admission_number || "—"} />
                 <Line label="Gender" value={admission.gender} />
                 <Line label="Date of Birth" value={admission.dob || "—"} />
                 <Line label="Place of Birth" value={admission.place_of_birth || "—"} />

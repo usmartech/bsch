@@ -3,7 +3,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertPeriodOpen, loadRules } from "@/lib/academic-calendar.server";
 import { activeAssessmentTypes } from "@/lib/academic-rules";
 import { assertTeaches, loadTeachingScope } from "@/lib/teaching.server";
-import { calculateLatePenalty } from "@/lib/assignments";
+import { type LatePenaltyType,  calculateLatePenalty } from "@/lib/assignments";
 import {
   assignmentGroupInputSchema,
   assignmentIdSchema,
@@ -155,7 +155,7 @@ export const getAssignmentDetails = createServerFn({ method: "GET" })
         submissionType: assignment.submission_type,
         allowLate: assignment.allow_late,
         lateGraceHours: Number(assignment.late_grace_hours),
-        latePenaltyType: assignment.late_penalty_type,
+        latePenaltyType: assignment.late_penalty_type as LatePenaltyType,
         latePenaltyValue: Number(assignment.late_penalty_value),
         maxLatePenaltyPercent: Number(assignment.max_late_penalty_percent),
         cutoffDate: assignment.cutoff_date,
@@ -346,7 +346,7 @@ export const submitAssignment = createServerFn({ method: "POST" })
       submittedAt,
       allowLate: assignment.allow_late,
       lateGraceHours: Number(assignment.late_grace_hours),
-      latePenaltyType: assignment.late_penalty_type,
+      latePenaltyType: assignment.late_penalty_type as LatePenaltyType,
       latePenaltyValue: Number(assignment.late_penalty_value),
       maxLatePenaltyPercent: Number(assignment.max_late_penalty_percent),
       cutoffDate: assignment.cutoff_date,
@@ -421,7 +421,7 @@ export const gradeSubmission = createServerFn({ method: "POST" })
       submittedAt: submission.submitted_at,
       allowLate: assignment.allow_late,
       lateGraceHours: Number(assignment.late_grace_hours),
-      latePenaltyType: assignment.late_penalty_type,
+      latePenaltyType: assignment.late_penalty_type as LatePenaltyType,
       latePenaltyValue: Number(assignment.late_penalty_value),
       maxLatePenaltyPercent: Number(assignment.max_late_penalty_percent),
       cutoffDate: assignment.cutoff_date,
@@ -588,7 +588,7 @@ export const reviewRegradeRequest = createServerFn({ method: "POST" })
         submittedAt: submission.submitted_at,
         allowLate: assignment.allow_late,
         lateGraceHours: Number(assignment.late_grace_hours),
-        latePenaltyType: assignment.late_penalty_type,
+        latePenaltyType: assignment.late_penalty_type as LatePenaltyType,
         latePenaltyValue: Number(assignment.late_penalty_value),
         maxLatePenaltyPercent: Number(assignment.max_late_penalty_percent),
         cutoffDate: assignment.cutoff_date,
