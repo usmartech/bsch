@@ -32,7 +32,7 @@ export const FEE_TYPES = [
   { value: "other", label: "Other Fee" },
 ] as const;
 
-export const FEE_STATUSES = ["pending", "paid", "overdue"] as const;
+export const FEE_STATUSES = ["pending", "paid", "partially_paid", "overdue"] as const;
 export const INCOME_STATUSES = ["received", "pending"] as const;
 export const EXPENSE_STATUSES = ["paid", "pending"] as const;
 export const PAYROLL_STATUSES = ["pending", "processed"] as const;
