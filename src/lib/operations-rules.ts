@@ -44,7 +44,7 @@ export const opsRulesSchema = z
     admissions: z.array(ruleSchema).max(30),
     library: z.array(ruleSchema).max(30),
     messaging: z.array(ruleSchema).max(30),
-    publicity: z.array(ruleSchema).max(30),
+    publicity: z.array(ruleSchema).max(30).default([]),
   })
   .refine((r) => OPS_LISTS.every((k) => unique(r[k])), { message: "List items must be unique" })
   .refine((r) => OPS_SECTIONS.every((s) => new Set(r[s].map((x) => x.key)).size === r[s].length), {

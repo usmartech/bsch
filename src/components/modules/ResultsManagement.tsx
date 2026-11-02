@@ -149,7 +149,7 @@ export function ResultsManagement() {
   const filteredStudents = (broadsheetRes?.broadsheet.students ?? []).filter(
     (st) =>
       st.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      st.admissionNumber.toLowerCase().includes(searchTerm.toLowerCase()),
+      (st.admissionNumber ?? "").toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   return (
