@@ -174,7 +174,7 @@ function Landing() {
               </div>
               <div className="space-y-3">
                 {activeNotices.map((n: any) => {
-                  const meta = NOTICE_LABEL_META[n.label] || NOTICE_LABEL_META.general;
+                  const meta = NOTICE_LABEL_META[n.label] ?? NOTICE_LABEL_META["general"]!;
                   return (
                     <div key={n.id} className="p-3.5 rounded-lg border bg-card space-y-1.5">
                       <div className="flex items-center justify-between">
