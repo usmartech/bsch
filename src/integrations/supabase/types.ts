@@ -3457,6 +3457,19 @@ export type Database = {
         }[]
       }
       next_generated_number: { Args: { _kind: string }; Returns: string }
+      write_school_configuration: {
+        Args: {
+          _columns?: Json
+          _incoming: Json
+          _key: string
+          _school_id: string
+        }
+        Returns: Json
+      }
+      write_school_module_policy: {
+        Args: { _features: Json; _school_id: string; _week_starts_on: string }
+        Returns: undefined
+      }
     }
     Enums: {
       access_level:
