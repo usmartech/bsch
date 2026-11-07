@@ -4,6 +4,8 @@
  * Distinct from class-teacher responsibility (class_teachers). Every module
  * that limits teachers to their own classes/subjects calls this.
  */
+import { getRoles } from "@/lib/admin.server";
+
 export interface TeachingScope {
   /** Administrators see and record everything. */
   isAdmin: boolean;
@@ -14,22 +16,18 @@ export interface TeachingScope {
 }
 
 export async function loadTeachingScope(supabase: any, userId: string): Promise<TeachingScope> {
-  const { data: roles, error } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userId);
-  if (error) throw new Error("Could not verify teaching permissions.");
-  const assigned = (roles ?? []).map((r: { role: string }) => r.role);
+  const assigned = await getRoles(supabase, userId);
   const role: string =
-    ["super_admin", "school_manager", "staff"].find((r) => assigned.includes(r)) ?? "";
+    ["super_admin", "school_manager", "staff", "student", "parent"].find((r) => assigned.includes(r)) ?? "";
   if (role === "super_admin" || role === "school_manager") {
     return { isAdmin: true, role, pairs: [], classes: [], subjects: [] };
   }
   if (role !== "staff") return { isAdmin: false, role, pairs: [], classes: [], subjects: [] };
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("teaching_assignments")
     .select("class_name, subject")
     .eq("teacher_id", userId);
+  if (error) throw new Error("Could not verify teaching assignments.");
   const pairs = (data ?? []) as { class_name: string; subject: string }[];
   return {
     isAdmin: false,

@@ -5,24 +5,16 @@ const ADMIN_ROLES = new Set(["super_admin", "school_manager"]);
 /**
  * Reads the caller's roles. The role-check helpers live in a private schema and
  * are not exposed through the API, so we read the role rows directly (the
- * caller can always read their own roles under RLS) and fall back to the
- * profile role. Super Admin is never restricted anywhere in the app.
+ * caller can always read their own roles under RLS). Profile fields are never
+ * an authorization source. Missing protected role rows grant no privileges.
  */
 export async function getRoles(supabase: SupabaseClient, userId: string): Promise<string[]> {
   const roles = new Set<string>();
 
-  const { data: roleRows } = await supabase.from("user_roles").select("role").eq("user_id", userId);
+  const { data: roleRows, error } = await supabase.from("user_roles").select("role").eq("user_id", userId);
+  if (error) throw new Error("Could not verify account permissions.");
   for (const row of roleRows ?? []) {
     if (row?.role) roles.add(row.role as string);
-  }
-
-  if (roles.size === 0) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", userId)
-      .maybeSingle();
-    if (profile?.role) roles.add(profile.role as string);
   }
 
   return [...roles];
