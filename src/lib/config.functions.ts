@@ -32,6 +32,7 @@ import { GRADING_SYSTEMS } from "@/lib/config";
 import { PEOPLE_FEATURE_KEY, parsePeopleRules, peopleRulesSchema } from "@/lib/people-rules";
 import { OPS_FEATURE_KEY, opsRulesSchema, parseOpsRules } from "@/lib/operations-rules";
 import { schoolCodeDigits } from "@/lib/numbering";
+import { writeModulePolicy, writeVersionedConfiguration } from "@/lib/configuration-writes";
 
 /** Everything the System Configuration module needs, in one round trip. */
 export const getConfiguration = createServerFn({ method: "GET" })
@@ -285,28 +286,7 @@ export const saveTenantSettings = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => tenantSettingsSchema.parse(d))
   .handler(async ({ data, context }) => {
     await assertSuperAdmin(context.supabase, context.userId);
-    // Fresh read so keys owned by other domains ("__"-prefixed: calendar, academic/people rules) are kept.
-    const existing = await readCalendarRow(context.supabase, data.schoolId);
-    const kept = Object.fromEntries(
-      Object.entries(existing?.features ?? {}).filter(([k]) => k.startsWith("__")),
-    );
-    const features = { ...mergedFeatures(data.features), ...kept } as unknown as Json;
-    // Only write the columns this domain owns; other domains' columns stay untouched.
-    const { error } = existing
-      ? await context.supabase
-          .from("tenant_settings")
-          .update({ week_starts_on: data.weekStartsOn, features })
-          .eq("school_id", data.schoolId)
-      : await context.supabase.from("tenant_settings").insert({
-          school_id: data.schoolId,
-          positions: [...DEFAULT_POSITIONS],
-          departments: [...DEFAULT_DEPARTMENTS],
-          schedule_types: [...DEFAULT_SCHEDULE_TYPES],
-          rating_scale: DEFAULT_RATING_SCALE as unknown as Json,
-          week_starts_on: data.weekStartsOn,
-          features,
-        });
-    if (error) throw new Error(error.message);
+    await writeModulePolicy(context.supabase, data.schoolId, mergedFeatures(data.features), data.weekStartsOn);
     await logAudit(context.supabase, context.userId, {
       action: "tenant_settings_saved",
       description: "Updated tenant policy and module availability",
@@ -627,12 +607,11 @@ async function readCalendarRow(supabase: any, schoolId?: string) {
   return data as { school_id: string; features: Record<string, unknown> | null; academic_year_start_month: number; grading_system: string } | null;
 }
 
-export const STALE_SETTINGS_MESSAGE = "These settings were changed by someone else. Reload and try again.";
+export { STALE_SETTINGS_MESSAGE } from "@/lib/configuration-writes";
 
 /**
  * Single write path for a versioned settings entry stored in tenant_settings.features.
- * Rejects stale copies, bumps the version, re-reads right before writing so other
- * domains' keys are preserved, and uses a compare-and-set on the stored version.
+ * The database transaction rejects stale copies and merges only this domain.
  */
 async function writeVersionedFeature<T extends { version: number }>(
   supabase: any,
@@ -642,24 +621,7 @@ async function writeVersionedFeature<T extends { version: number }>(
   parse: (raw: unknown) => T,
   columns: Record<string, unknown> = {},
 ): Promise<T> {
-  const row = await readCalendarRow(supabase, schoolId);
-  const stored = row?.features?.[key] as { version?: unknown } | undefined;
-  const current = parse(stored);
-  if (current.version !== incoming.version) throw new Error(STALE_SETTINGS_MESSAGE);
-  const next = { ...incoming, version: current.version + 1 };
-  const features = { ...(row?.features ?? defaultModuleFeatures()), [key]: next } as unknown as Json;
-
-  if (!row) {
-    const { error } = await supabase.from("tenant_settings").insert({ school_id: schoolId, ...columns, features });
-    if (error) throw new Error(error.code === "23505" ? STALE_SETTINGS_MESSAGE : error.message);
-    return next;
-  }
-  let q = supabase.from("tenant_settings").update({ ...columns, features }).eq("school_id", schoolId);
-  if (typeof stored?.version === "number") q = q.eq(`features->${key}->>version`, String(stored.version));
-  const { data: written, error } = await q.select("school_id");
-  if (error) throw new Error(error.message);
-  if (!written?.length) throw new Error(STALE_SETTINGS_MESSAGE);
-  return next;
+  return writeVersionedConfiguration(supabase, schoolId, key, incoming, parse, columns);
 }
 
 /** The academic calendar for the active school — readable by any signed-in user. */
