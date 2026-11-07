@@ -1,15 +1,11 @@
 import { RULES_FEATURE_KEY, parseRules } from "@/lib/academic-rules";
 import { CALENDAR_FEATURE_KEY, parseCalendar, periodEnd, writeBlockReason } from "@/lib/academic-calendar";
+import { readSchoolSettings } from "@/lib/school.server";
 
 /** Server-side lifecycle guard: refuses writes into locked (or not-yet-started) periods. */
 /** The school's configured calendar on the server, or null when none is saved yet. */
 export async function loadCalendar(supabase: any) {
-  const { data } = await supabase
-    .from("tenant_settings")
-    .select("features, academic_year_start_month")
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
+  const data = await readSchoolSettings(supabase);
   const raw = data?.features?.[CALENDAR_FEATURE_KEY];
   return raw ? parseCalendar(raw, data?.academic_year_start_month ?? 9) : null;
 }
@@ -31,11 +27,6 @@ export async function assertPeriodOpen(
 
 /** The school's academic rules on the server (defaults when none saved). */
 export async function loadRules(supabase: any) {
-  const { data } = await supabase
-    .from("tenant_settings")
-    .select("features")
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
+  const data = await readSchoolSettings(supabase);
   return parseRules(data?.features?.[RULES_FEATURE_KEY]);
 }

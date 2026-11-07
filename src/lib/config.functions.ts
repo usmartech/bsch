@@ -33,6 +33,7 @@ import { PEOPLE_FEATURE_KEY, parsePeopleRules, peopleRulesSchema } from "@/lib/p
 import { OPS_FEATURE_KEY, opsRulesSchema, parseOpsRules } from "@/lib/operations-rules";
 import { schoolCodeDigits } from "@/lib/numbering";
 import { writeModulePolicy, writeVersionedConfiguration } from "@/lib/configuration-writes";
+import { readSchoolSettings, resolveProvisionedSchool } from "@/lib/school.server";
 
 /** Everything the System Configuration module needs, in one round trip. */
 export const getConfiguration = createServerFn({ method: "GET" })
@@ -442,13 +443,7 @@ export const saveOperationsRules = createServerFn({ method: "POST" })
 export const getTenantOptions = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data, error } = await context.supabase
-      .from("tenant_settings")
-      .select("school_id, positions, departments, schedule_types")
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .maybeSingle();
-    if (error) throw new Error(error.message);
+    const data = await readSchoolSettings(context.supabase);
 
     return {
       positions: mergePositions(data?.positions?.length ? data.positions : DEFAULT_POSITIONS),
@@ -461,9 +456,12 @@ export const getTenantOptions = createServerFn({ method: "GET" })
 export const getSubjectOptions = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const school = await resolveProvisionedSchool(context.supabase);
+    if (!school) return [];
     const { data, error } = await context.supabase
       .from("subjects")
       .select("name, active")
+      .eq("school_id", school.id)
       .order("name");
     if (error) throw new Error(error.message);
     return [...new Set((data ?? []).filter((s) => s.active !== false).map((s) => s.name))];
@@ -473,9 +471,12 @@ export const getSubjectOptions = createServerFn({ method: "GET" })
 export const getSubjectCatalog = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const school = await resolveProvisionedSchool(context.supabase);
+    if (!school) return [];
     const { data, error } = await context.supabase
       .from("subjects")
       .select("name, level_code, active")
+      .eq("school_id", school.id)
       .eq("active", true)
       .order("name");
     if (error) throw new Error(error.message);
@@ -576,9 +577,12 @@ export const deleteSchoolClass = createServerFn({ method: "POST" })
 export const getSchoolClasses = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const school = await resolveProvisionedSchool(context.supabase);
+    if (!school) return [];
     const { data, error } = await context.supabase
       .from("school_classes")
       .select("id, school_id, level_code, name, sort_order")
+      .eq("school_id", school.id)
       .eq("active", true)
       .order("sort_order", { ascending: true });
     if (error) throw new Error(error.message);
@@ -600,10 +604,7 @@ export const getSchoolClasses = createServerFn({ method: "GET" })
  * needs no new table; module switches ignore it (mergedFeatures is boolean-only).
  */
 async function readCalendarRow(supabase: any, schoolId?: string) {
-  let q = supabase.from("tenant_settings").select("school_id, features, academic_year_start_month, grading_system");
-  q = schoolId ? q.eq("school_id", schoolId) : q.order("created_at", { ascending: true }).limit(1);
-  const { data, error } = await q.maybeSingle();
-  if (error) throw new Error(error.message);
+  const data = await readSchoolSettings(supabase, schoolId);
   return data as { school_id: string; features: Record<string, unknown> | null; academic_year_start_month: number; grading_system: string } | null;
 }
 
