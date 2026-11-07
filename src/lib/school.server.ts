@@ -1,19 +1,29 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 /**
- * The provisioned school every module is scoped to: the earliest active
- * school (falling back to the earliest school). One resolver so overview,
- * finance, archives and data-access rules never disagree on "the school".
+ * Operational school comes only from the authenticated, active membership.
+ * Missing or ambiguous membership never selects another school's first row.
  */
 export async function resolveProvisionedSchool(
   supabase: SupabaseClient | any,
 ): Promise<{ id: string; name: string; currency: string; locale: string } | null> {
-  const { data } = await supabase
+  const { data: schoolId, error: scopeError } = await supabase.rpc("resolve_school_context");
+  if (scopeError || !schoolId) throw new Error("An active, unambiguous school membership is required.");
+  const { data, error } = await supabase
     .from("schools")
     .select("id, name, currency, locale")
-    .order("active", { ascending: false })
-    .order("created_at")
-    .limit(1)
+    .eq("id", schoolId)
+    .eq("active", true)
     .maybeSingle();
-  return (data as any) ?? null;
+  if (error) throw new Error("Could not read the authorized school.");
+  return data ?? null;
+}
+
+/** All operational configuration readers use this tenant-bound query. */
+export async function readSchoolSettings(supabase: any, schoolId?: string) {
+  const id = schoolId ?? (await resolveProvisionedSchool(supabase))?.id;
+  if (!id) throw new Error("School configuration is unavailable.");
+  const { data, error } = await supabase.from("tenant_settings").select("*").eq("school_id", id).maybeSingle();
+  if (error) throw new Error("Could not read school configuration.");
+  return data;
 }

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { createServerFn } from "@tanstack/react-start";
 import { assertPeriodOpen } from "@/lib/academic-calendar.server";
+import { resolveProvisionedSchool } from "@/lib/school.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
   adminResetSchema,
@@ -149,13 +150,16 @@ async function syncTeachingAssignments(
   classes: string[] | undefined,
   subjects: string[] | undefined,
 ) {
+  const { data: teacher, error: teacherError } = await client.from("profiles").select("school_id").eq("id", teacherId).single();
+  if (teacherError || !teacher?.school_id) throw new Error("Teacher school ownership is required.");
+  const schoolId = teacher.school_id;
   const isTeacher = (position ?? "").trim().toLowerCase() === "teacher";
   let rows: { teacher_id: string; class_name: string; subject: string }[] = [];
   if (isTeacher && (classes?.length ?? 0) > 0) {
     const { matchTeachingPairs, teachingLevelError } = await import("@/lib/teaching-levels");
     const [{ data: cls }, { data: subs }] = await Promise.all([
-      client.from("school_classes").select("name, level_code").eq("active", true),
-      client.from("subjects").select("name, level_code").eq("active", true),
+      client.from("school_classes").select("name, level_code").eq("school_id", schoolId).eq("active", true),
+      client.from("subjects").select("name, level_code").eq("school_id", schoolId).eq("active", true),
     ]);
     const result = matchTeachingPairs(
       classes ?? [],
@@ -169,7 +173,7 @@ async function syncTeachingAssignments(
   }
   await client.from("teaching_assignments").delete().eq("teacher_id", teacherId);
   if (rows.length === 0) return;
-  const { error } = await client.from("teaching_assignments").insert(rows);
+  const { error } = await client.from("teaching_assignments").insert(rows.map(row => ({ ...row, school_id: schoolId })));
   if (error) throw new Error(error.message);
 }
 
@@ -192,6 +196,8 @@ export const createAccount = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => createAccountSchema.parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
+    const school = await resolveProvisionedSchool(context.supabase);
+    if (!school) throw new Error("School ownership is required.");
     if (
       (data.role === "super_admin" || data.role === "school_manager") &&
       !(await isSuperAdmin(context.supabase, context.userId))
@@ -211,6 +217,7 @@ export const createAccount = createServerFn({ method: "POST" })
 
     const { error: profileError } = await supabaseAdmin.from("profiles").insert({
       id: user.user.id,
+      school_id: school.id,
       full_name: data.fullName,
       email: data.email,
       username: data.username || null,
@@ -231,7 +238,8 @@ export const createAccount = createServerFn({ method: "POST" })
       await supabaseAdmin.auth.admin.deleteUser(user.user.id);
       throw new Error(profileError.message);
     }
-    await supabaseAdmin.from("user_roles").insert({ user_id: user.user.id, role: data.role });
+    const { error: roleError } = await supabaseAdmin.from("user_roles").insert({ user_id: user.user.id, role: data.role, school_id: data.role === "super_admin" ? null : school.id });
+    if (roleError) throw new Error("Could not assign protected account permissions.");
     await syncTeachingAssignments(
       supabaseAdmin,
       user.user.id,
@@ -256,6 +264,8 @@ export const updateAccount = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
     await assertCanManageAccount(context.supabase, context.userId, data.userId);
+    const { data: target, error: targetError } = await context.supabase.from("profiles").select("school_id").eq("id", data.userId).single();
+    if (targetError || !target?.school_id) throw new Error("Target school ownership is required.");
     if (data.role === "super_admin" || data.role === "school_manager") {
       await assertSuperAdmin(context.supabase, context.userId);
     }
@@ -286,7 +296,8 @@ export const updateAccount = createServerFn({ method: "POST" })
 
     await supabaseAdmin.auth.admin.updateUserById(data.userId, { email: data.email });
     await supabaseAdmin.from("user_roles").delete().eq("user_id", data.userId);
-    await supabaseAdmin.from("user_roles").insert({ user_id: data.userId, role: data.role });
+    const { error: roleError } = await supabaseAdmin.from("user_roles").insert({ user_id: data.userId, role: data.role, school_id: data.role === "super_admin" ? null : target.school_id });
+    if (roleError) throw new Error("Could not assign protected account permissions.");
     await syncTeachingAssignments(
       supabaseAdmin,
       data.userId,
@@ -358,6 +369,8 @@ export const bulkImportAccounts = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => bulkImportSchema.parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
+    const school = await resolveProvisionedSchool(context.supabase);
+    if (!school) throw new Error("School ownership is required.");
     const superAdmin = await isSuperAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
@@ -380,6 +393,7 @@ export const bulkImportAccounts = createServerFn({ method: "POST" })
       }
       await supabaseAdmin.from("profiles").insert({
         id: user.user.id,
+        school_id: school.id,
         full_name: row.fullName,
         email: row.email,
         username: row.username || null,
@@ -389,7 +403,8 @@ export const bulkImportAccounts = createServerFn({ method: "POST" })
         department: row.department || null,
         class_name: row.className || null,
       });
-      await supabaseAdmin.from("user_roles").insert({ user_id: user.user.id, role: row.role });
+      const { error: roleError } = await supabaseAdmin.from("user_roles").insert({ user_id: user.user.id, role: row.role, school_id: row.role === "super_admin" ? null : school.id });
+      if (roleError) { failed.push(`${row.email}: could not assign permissions`); continue; }
       created += 1;
     }
 
