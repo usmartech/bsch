@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: school-hub-ci-\${{ github.ref }}
+  group: school-hub-ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
