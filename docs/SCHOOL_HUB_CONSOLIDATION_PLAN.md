@@ -1,93 +1,70 @@
 # School Hub consolidation plan
 
-**Status:** Stage 0 audit complete; Stage 1 security hygiene and architecture baseline in progress.  
-**Primary runtime:** Existing School Hub Enterprise AppDeploy app `school-hub-enterprise-iruutw`.  
-**Source repository:** `usmartech/bsch`, default branch `main`.  
-**Integration branch:** `integration/school-hub-enterprise-consolidation`.
+**Status:** AppDeploy baseline re-synchronized; security/engineering baseline remains in a draft PR; module integration continues incrementally.  
+**Live application:** School Hub Enterprise, AppDeploy app \`school-hub-enterprise-iruutw\` — https://school-hub-enterprise-iruutw.v2.appdeploy.ai/  
+**Source repository:** \`usmartech/bsch\`, default branch \`main\`; integration review branch \`integration/school-hub-enterprise-consolidation\`.
 
 ## Governing decisions
 
-1. Preserve the existing AppDeploy app, URL, route contracts, user-visible workflows and existing records. No replacement app or wholesale repository overwrite.
-2. Treat the GitHub project as a source of domain capabilities and UI workflows to port selectively, not as a second runtime architecture.
-3. Target one Supabase PostgreSQL database and one Supabase Auth identity provider for the eventual production data/authentication plane, subject to environment provisioning, migration rehearsal and explicit cutover approval. AppDeploy remains the deployment/runtime host for the existing application; its key-value store is a transitional persistence source only and must not remain a competing domain source of truth after cutover.
-4. Do not run two identity providers, parallel role registries, parallel tenant/school registries, or dual-write domain records. A temporary read-only migration/verification window is allowed; writes switch once at a controlled cutover.
-5. Preserve existing tenant, school, membership, role, permission, ABAC, audit, event and domain record semantics. Map identifiers explicitly; never regenerate IDs merely because the storage technology changes.
-6. All PostgreSQL DDL is reviewed and versioned. No SQL in either project is considered applied merely because it exists in source control.
+1. The existing AppDeploy project is the sole current runtime, authentication authority, authorization authority and persistence authority. Preserve its live URL, existing source, records and contracts.
+2. The GitHub repository is a reference/source of domain workflows, UI behavior and validation rules. Integrate selectively into AppDeploy; do not deploy the GitHub application wholesale.
+3. No Supabase project is provisioned for this application. Do not introduce Supabase Auth, Supabase persistence, direct Supabase clients, service-role access or another competing runtime into the live application.
+4. Keep the enterprise PostgreSQL SQL package in AppDeploy as future design scaffolding only. No SQL migration is considered executed or PostgreSQL-validated without a real PostgreSQL test environment and an approved future migration decision.
+5. Preserve tenant and school IDs, membership records, dynamic roles and policies, explicit-deny precedence, record-derived ABAC scope, table names, key formats, schemas, audit/event names, workflow transitions, validation and existing business rules. Map source behavior to the central AppDeploy services; do not create duplicate registries or authorities.
+6. Never read, copy or migrate environment-file contents. Use AppDeploy's approved secret manager for any future secrets. Do not rewrite published Git history without explicit owner approval.
+7. Keep source changes reviewable on branches/PRs. Do not deploy AppDeploy runtime changes until they have been tested through a safe staging path; preserve the current healthy deployment.
 
-## Stage 0 — source and deployment baseline (complete)
+## Re-synchronized baseline — 11 November 2026
 
-- AppDeploy deployment checked: snapshot `1794307845954`, status `ready`, live URL https://school-hub-enterprise-iruutw.v2.appdeploy.ai/.
-- Existing AppDeploy source inventory: 52 files, including platform, enterprise, governance, roles, schools, scopes, students, academic, security, PostgreSQL design migrations and tests.
-- GitHub repository confirmed: public `usmartech/bsch`, default branch `main`; TanStack Start/React, Supabase Auth/PostgreSQL, Drizzle and a broad set of school-domain modules and tests.
-- Repository contains six Supabase SQL migration files plus a separate Drizzle migration history. These histories must be reconciled before selecting a single migration authority.
-- The latest school-membership migration performs a guarded backfill that requires exactly one existing school. It is not safe to apply as a generic multi-school production migration without reviewing actual target data and rewriting the backfill.
-- The repository's role model and school-scoped membership model differ from the AppDeploy platform's tenant membership and dynamic RBAC/ABAC contracts. They must be mapped, not copied as competing authorization systems.
+- AppDeploy deployment: snapshot \`1794388390428\`, status \`ready\`, live URL unchanged.
+- AppDeploy source inventory: 65 files. It includes the platform, enterprise, governance, role/scope, school, student, academic and admissions backends; current UI components; PostgreSQL design migrations; architecture documentation; and test specifications.
+- AppDeploy validation reports \`valid: true\` with no validation errors. The QA snapshot reported no frontend or network errors. The current test suite has seven scenarios and a validation warning recommending a focused 3–5 test suite. This is not evidence that adversarial multi-tenant API tests or PostgreSQL tests have run.
+- GitHub default branch: \`main\`, head \`3dfcd6888e519d528d360b3452d1287ac92f22e6\` (7 November 2026). The source is a TanStack Start/React application with Supabase-specific server functions and separate Drizzle/Supabase migration histories.
+- Draft PR #1 remains open on \`integration/school-hub-enterprise-consolidation\`. It contains the initial security hygiene, CI and consolidation documents; it is not an AppDeploy runtime staging environment.
+- AppDeploy's available source interface in this run supports source inspection and deployment updates, but no separate AppDeploy source branch or preview-edit operation was available. No live AppDeploy source was changed or deployed in this run.
 
-## Stage 1 — security and architecture baseline
+## Security and CI baseline
 
-- Remove the tracked root `.env` from the integration branch and ignore local environment files. The file was not opened or copied.
-- This does not erase prior Git history. Treat any credentials ever committed in that file as potentially exposed: rotate/revoke them with their providers, inspect repository history privately, and arrange history cleanup if required.
-- Establish one written migration authority, identity authority, tenant hierarchy and domain-service ownership map before moving application modules.
-- Keep this work on an integration branch and submit as a draft pull request. Do not merge to `main` or deploy unverified code.
+- The GitHub \`main\` tree contains a tracked root \`.env\`; the current \`.gitignore\` does not exclude \`.env\` files. The environment file was not directly fetched or copied.
+- PR #1 removes the tracked root file from its proposed branch and adds \`.env\`, \`.env.*\`, and \`!.env.example\` ignore rules. This does not remove historical Git blobs. Privately review the file's history and rotate/revoke any private or privileged credentials that were actually present; do not expose values in issues, commits, logs or reports.
+- PR #1's first GitHub Actions run failed during the Node setup step; dependency installation, typecheck, lint, tests and build were skipped. The workflow uses npm caching/install commands while the repository provides \`bun.lock\` and no npm lockfile. The workflow is being aligned to Bun's frozen-lockfile install before interpreting CI as a code failure.
+- GitHub CI validates the GitHub source branch only. It does not validate the AppDeploy runtime or authorize a production deployment.
 
-## Stage 2 — contract and schema reconciliation
+## Evidence-based integration matrix
 
-Produce a reviewed mapping for:
-- Identity: Supabase Auth user ID as canonical principal; one profile projection; one membership source; one role-grant/permission/ABAC evaluator. Existing AppDeploy user IDs must be mapped and preserved where compatible; conflicts require an explicit mapping table and reconciliation report.
-- Organisation: tenant → school → campus → branch → department → unit → location, with parent-child integrity, tenant ownership and lifecycle constraints. Existing school IDs and tenant IDs remain stable.
-- Configuration: one versioned tenant/school configuration registry for academic year/calendar, grading, finance, locale/timezone, numbering and integrations. Domain modules consume typed configuration services.
-- Domain data: one canonical schema and one repository/data-access boundary. Do not retain Supabase table access alongside AppDeploy KV domain stores after cutover.
-- Governance: one actor attribution model, audit append path, workflow state machine, transactional outbox, idempotency and retry contract.
-- Existing Supabase RLS policies, grants, SECURITY DEFINER functions, triggers and indexes must be tested against tenant and school membership edge cases. Client-side role/module visibility is never an authorization boundary.
+| GitHub source area | Current AppDeploy counterpart | Compatibility decision / status |
+|---|---|---|
+| \`src/integrations/supabase/*\`, \`src/lib/access.ts\`, \`src/lib/admin.server.ts\` | \`backend/platform.ts\`, \`backend/request-security.ts\`, \`backend/roles.ts\`, \`backend/scopes.ts\`, AppDeploy \`requireAuth()\` | Incompatible identity/policy implementations. Do not port Supabase auth middleware, profile-role checks or a second user registry. Reuse AppDeploy identity, membership, dynamic RBAC/ABAC and deny precedence. |
+| \`src/lib/students.functions.ts\`, schemas and student UI | \`backend/students.ts\`, \`backend/academic.ts\`, \`src/components/StudentManagement.tsx\` | AppDeploy student API and UI already exist. Preserve server-issued IDs, registration intents, tenant partitions, optimistic versions, school scope and existing routes. Extend only after parity tests identify a real gap. |
+| \`src/lib/admissions.functions.ts\`, schemas and admissions UI | \`backend/admissions.ts\`, \`src/components/AdmissionsManagement.tsx\` | AppDeploy admissions intake/review, decision history, document storage and link-to-existing-student flow exist. Do not create another student or enrolment registry. API security execution remains pending. |
+| \`src/lib/academic-calendar.ts\`, \`academic-rules.ts\`, configuration modules | \`backend/academic.ts\`, central configuration APIs and \`src/components/AcademicConfiguration.tsx\` | AppDeploy academic-year/term/class/section/subject catalog exists. Reconcile calendar, grading-band and attendance-rule semantics with the single AppDeploy configuration authority before adding consumers; no module-local settings copies. |
+| \`src/lib/attendance.functions.ts\`, \`attendance.schemas.ts\` | Attendance navigation item exists in \`src/App.tsx\`; no AppDeploy attendance backend or operational component is present in the current 65-file inventory | Highest-value next vertical slice. GitHub functions depend on Supabase \`profiles\`, \`admissions\`, \`class_teachers\` and \`student_attendance\`, and use class names/static roles. Adapt to AppDeploy student IDs, school-scoped academic class IDs, \`teaching_assignments\`, \`tenantAccessFromRequest\`, \`authorizeRecord\`, shared academic rules, audit and domain events. Never port direct Supabase calls or trust client-supplied class scope. |
+| \`src/lib/staff.functions.ts\`, staff UI and \`people-rules.ts\` | HR configuration definitions exist; no complete AppDeploy staff domain route/component is present | Later vertical slice. Staff employment records must remain distinct from login identities. Reuse AppDeploy memberships for user linkage, central configuration, authorization, audit and workflow; do not use \`profiles.role\` as a second identity authority. |
+| Assessment, exams, results, reporting and timetable modules | Academic catalog and shared platform services; no complete operational route set evidenced | Later dependency-ordered adapters. Reuse one grading/rules authority, academic references, workflow and audit services. |
+| Fees, invoices, finance and payroll modules | Central finance configuration only; no complete runtime finance domain route set evidenced | Later stage after ledger, approval, idempotency and reconciliation contracts are designed. No direct Supabase writes. |
+| Library, messaging, publicity, archives, lessons, assignments and campus services | Shared platform/storage/notification foundations; module coverage incomplete or unverified | Later adapters using shared storage, notification, reporting, audit and tenant-scope services. |
+| Drizzle schema and Supabase migrations | AppDeploy \`database/postgresql/001..008\` and \`900_validation.sql\` | Reference material only. Reconcile schema semantics into the single AppDeploy-owned future SQL chain; do not run GitHub migration histories or claim SQL execution. |
+| GitHub Actions, Vitest and Vite | AppDeploy deployment/QA process | Adopt source CI after its own run passes. Keep AppDeploy release as the only live deployment path; GitHub CI is not AppDeploy runtime QA. |
 
-Deliverables: canonical schema, data dictionary, migration matrix, compatibility adapters, API contract map, data-quality report and rollback/recovery plan.
+## Integration sequence
 
-## Stage 3 — persistence and identity migration
+1. Maintain the single AppDeploy platform boundary: identity, membership, RBAC/ABAC, tenant/school scope, configuration, data access, audit, workflow and event helpers.
+2. Complete the Attendance vertical slice against AppDeploy contracts: bounded class roster reads, one register per school/class/date, duplicate and roster validation, idempotent/concurrency-safe saves, server-derived scope, correction workflow where supported, audit/domain events, and cross-tenant/cross-school/teacher-assignment tests.
+3. Add Staff/People only after defining an employee record model separate from AppDeploy login identities and mapping the existing HR configuration keys.
+4. Continue with grading/assessment, examinations/results/reporting, finance, communications and campus services in dependency order.
+5. Update the integration matrix and tests at each stage. Do not call a module complete because a screen, route, SQL file or test specification exists; require executed behavior and authorization evidence.
 
-1. Provision the target Supabase project and confirm region, backup/PITR options, connection pooling, Auth settings, redirect URLs and operational owner.
-2. Store credentials only in AppDeploy secret storage; never in source, chat, client bundles or logs.
-3. Create a staging environment with representative sanitized data and apply one consolidated migration chain from a clean database.
-4. Reconcile the repository's Drizzle and Supabase migration histories into one authoritative ordered migration chain; do not run both histories blindly.
-5. Export AppDeploy KV records by bounded, checkpointed tenant pages. Preserve IDs, tenant ownership, versions, timestamps, actor IDs, audit history and event IDs. Validate counts, checksums, references and uniqueness.
-6. Backfill into PostgreSQL in dependency order with idempotent import receipts. Quarantine invalid/orphaned rows; never silently discard or coerce them.
-7. Run a read-only comparison and adversarial tenant/RLS test suite. Keep production writes on the old store until the cutover gate passes.
-8. Freeze writes for the cutover window, take a recoverable backup/export, apply final delta, verify invariants, then switch all application data access and auth to the single Supabase-backed path.
-9. Retain a time-bounded, access-controlled rollback export. Do not resume writes to the old store after cutover; rollback is a coordinated restore/cutback, not dual-write.
+## Release and verification gates
 
-## Stage 4 — module porting and centralization
+- Test changed code before release: typecheck, lint, focused unit tests, backend route tests, tenant-isolation/RBAC/ABAC tests, validation and regression checks.
+- Verify server-derived tenant/school/record scope, explicit deny precedence, inactive membership, expired delegation, cross-tenant IDOR, cross-school access, teacher assignment scope, idempotency and concurrency.
+- Run AppDeploy frontend/backend/network/e2e QA and verify the resulting deployment status before claiming release success.
+- Keep the current healthy deployment untouched while a safe AppDeploy staging/preview route is unavailable. A GitHub draft PR is source review, not a substitute for an AppDeploy staging runtime.
+- Maintain PostgreSQL install/upgrade/RLS/restore test plans in the SQL scaffolding, but do not claim PostgreSQL validation until a real database test environment runs.
 
-Port in dependency order, adapting the GitHub UI and workflows to existing enterprise contracts:
-1. Shared server data-access, validation, error mapping, pagination and authorization boundary.
-2. Organisation, identity, membership, role and configuration consumers.
-3. Students/admissions and staff/people.
-4. Academic calendar, classes, subjects, teaching assignments, attendance, lessons and timetable.
-5. Assessment, examinations, results and termly reporting.
-6. Finance configuration, fees, invoices, receipts, income/expenses and payroll.
-7. Library, messaging, parent communication, archives, publicity and analytics/reporting.
+## Current blockers and next stage
 
-Each module must use shared repositories/services and server-derived tenant/school/record scope. Preserve established public API and UI behavior through compatibility adapters until callers are migrated. Remove old implementations only after usage and data parity are demonstrated.
-
-## Stage 5 — verification and release
-
-Required gates:
-- TypeScript type-check, lint and production build for the complete frontend/server application.
-- Unit, integration and migration tests, including clean install and upgrade from a representative prior schema.
-- Authorization matrix tests for every route/action; deny precedence, inactive membership, expired delegation, cross-tenant IDOR, cross-school access, teacher assignment scope and parent/student self-scope.
-- RLS tests for anon/authenticated/service roles, table grants, function execution and tenant/school isolation.
-- End-to-end tests for login, admin password reset, setup, school switching, module access, student/staff lifecycle, academic operations, exams/results, finance, audit and approval workflows.
-- Performance tests for bounded pagination, indexes, tenant-scale reads, concurrency, idempotency and outbox delivery.
-- Security checks for secrets, dependency vulnerabilities, CSRF/origin, session expiry, upload validation and privilege escalation.
-- Backup restore drill, monitoring/alerts, SLO/RTO/RPO, incident and rollback runbooks.
-- Deployment preview and smoke tests before production release; one approved release pipeline with immutable artifacts and a documented rollback target.
-
-## Current blockers / inputs required
-
-- Rotate any secrets that may have been present in the tracked `.env`; the file's history has not been rewritten.
-- Provision/identify the intended Supabase project and authorize secure entry of its URL and publishable key (plus server-only credentials if a service-role operation is genuinely required).
-- Confirm a migration window and the accountable data owner for production cutover.
-- Confirm the actual current AppDeploy KV dataset and tenant count before designing irreversible backfills.
-
-## Non-goals
-
-- No blind source copy, framework rewrite, second auth system, duplicate registry, parallel domain database, or production SQL execution during source reconciliation.
-- No claim of production readiness until every release gate is evidenced.
+- The AppDeploy runtime is healthy, but a separate safe staging/preview path for AppDeploy source edits was not available in this run. No runtime change was made.
+- Fix and rerun the GitHub PR CI workflow using the repository's Bun lockfile.
+- Next implementation target: Attendance adapter and UI, beginning with a complete contract review of AppDeploy student, academic and teaching-assignment records. Do not port the source module's Supabase data access or static role model.
+- Continue to preserve the existing AppDeploy deployment and do not introduce Supabase Auth or persistence.
