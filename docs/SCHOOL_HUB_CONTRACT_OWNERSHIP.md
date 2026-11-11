@@ -1,27 +1,37 @@
 # School Hub contract ownership map
 
-This file defines the initial ownership boundary for the consolidation. It is a migration map, not proof that every capability is complete.
+This map describes the live AppDeploy authority and the rules for adapting the GitHub source. It is an integration boundary, not a claim that every domain module is complete.
 
-| Concern | Canonical owner after cutover | GitHub source to adapt | Existing AppDeploy contract to preserve |
+| Concern | Sole current AppDeploy owner | GitHub source to adapt/reference | Required compatibility rule |
 |---|---|---|---|
-| Identity | Supabase Auth + canonical profile projection | `src/hooks/useSession.tsx`, `src/integrations/supabase/*` | Stable authenticated principal, actor attribution |
-| Membership / tenant | Central platform organisation service and one PostgreSQL membership model | `src/lib/school.server.ts`, membership migrations | `tenantContext`, `tenantAccessFromRequest`, tenant and school scope |
-| RBAC / ABAC | One server-side policy evaluator and normalized grants | `src/lib/access.ts`, `src/lib/user-management.ts`, RLS functions | `authorize`, `authorizeRecord`, deny precedence, teaching scope |
-| Organisation hierarchy | One parent-child organisation registry | school setup and school membership migrations | `organisation_nodes`, hierarchy governance API |
-| Configuration | One versioned configuration service | `src/lib/config*`, finance/academic config modules | `configuration.v1`, version/concurrency/audit contract |
-| Student/admissions | Shared student and admissions domain services | `src/lib/students*`, `src/lib/admissions*` | Existing student API, tenant partitioning, IDs and audit/events |
-| Staff/people | Shared people and staff services | `src/lib/staff*`, `src/lib/people-rules.ts` | Membership identity linkage and school scope |
-| Academics | Shared calendar, class, subject, teaching and attendance services | academic, teaching, attendance, timetable modules | Academic configuration and ABAC teaching assignment |
-| Assessment/exams/results | Shared assessment and result services | assessment, exams, results, reports modules | Approval workflows, grading config, audit/events |
-| Finance | Shared finance ledger/configuration services | finance, fees, invoices, payroll modules | Currency/numbering/config authority, maker-checker and audit |
-| Audit/workflow/events | Shared governance and outbox services | audit logs and workflow consumers | Actor-attributed audit, workflow state and versioned domain events |
-| Release | One pipeline and immutable release artifact | GitHub Actions, Vitest, Vite | Existing AppDeploy deployment and rollback history |
+| Runtime and release | Existing School Hub Enterprise AppDeploy app and its release history | Vite/TanStack build and GitHub Actions | No replacement app or second live runtime. Test changes before release and preserve the healthy deployment. |
+| Authentication / principal | AppDeploy \`requireAuth()\` and its stable authenticated user ID | \`src/hooks/useSession.tsx\`, \`src/integrations/supabase/*\` | Do not introduce Supabase Auth or a second user registry. Translate source operations to the AppDeploy principal and preserve actor attribution. |
+| Tenant membership | \`tenantContext\`, \`tenantMembershipAccess\`, \`tenantAccessFromRequest\` in \`backend/platform.ts\` | \`src/lib/school.server.ts\`, membership migrations | The request tenant selector is not proof of access. Resolve active membership server-side and preserve existing tenant IDs and denial contracts. |
+| RBAC / ABAC | \`authorize\`, \`authorizeRecord\`, \`hasSchoolScope\`, role and scope routes | \`src/lib/access.ts\`, \`src/lib/user-management.ts\`, SQL role/RLS helpers | Preserve dynamic grants, explicit-deny precedence, record-derived school/class/subject/year scope, delegation expiry and teacher-assignment checks. Do not copy static role enums or client-side module permissions as authorization. |
+| Organisation hierarchy | AppDeploy school and organisation-node registries and governance routes | School setup and membership migrations | Preserve tenant/school IDs, parent-child integrity and current hierarchy records. Do not create another school or organisation registry. |
+| Configuration | AppDeploy central configuration definitions, versioned records/history and write APIs | \`src/lib/config*\`, academic/finance/people/operations configuration modules | Map each setting to one existing key/owner and versioned write path. Do not port \`tenant_settings.features\` as a competing store or create module-local settings copies. |
+| Persistence / data access | AppDeploy \`db\` SDK and \`tenantTable()\` in \`backend/platform.ts\` | Supabase clients, server functions and Drizzle models | All live reads/writes use AppDeploy SDK and tenant partitions. No direct Supabase clients, service-role calls, dual writes or second persistence path. |
+| Students | \`backend/students.ts\`, \`backend/academic.ts\`, Student Management UI | \`src/lib/students*\`, student UI | Preserve current student IDs/numbers, registration intents, schemas, version checks, routes, school scope, audit and event semantics. |
+| Admissions | \`backend/admissions.ts\`, Admissions UI and AppDeploy storage | \`src/lib/admissions*\` | Preserve the AppDeploy state machine and decision history. Link to an existing student; do not duplicate student creation or enrolment. |
+| Academic references | \`backend/academic.ts\`, academic catalog UI | \`src/lib/academic-calendar.ts\`, academic rules and teaching modules | Keep one school-scoped academic-year/term/class/section/subject registry. Validate all references server-side. |
+| Attendance | Not yet implemented as an AppDeploy operational route/component | \`src/lib/attendance.functions.ts\`, \`attendance.schemas.ts\` | Build an AppDeploy adapter using existing students, academic IDs, teaching assignments, shared configuration, \`authorizeRecord\`, audit and domain events. Do not port Supabase \`profiles\`, \`admissions\`, \`class_teachers\` or \`student_attendance\` queries. |
+| Staff / people | Central AppDeploy identity/membership, HR configuration and shared governance; full employee domain not yet implemented | \`src/lib/staff*\`, \`src/components/modules/StaffManagement.tsx\`, \`src/lib/people-rules.ts\` | Employee/employment records are not login identities. Link to an existing AppDeploy user only when required; do not infer access from \`profiles.role\`. Reuse central permissions, configuration, audit and workflow. |
+| Assessment / exams / results | Shared academic references, configuration, authorization and governance; full operational routes not yet evidenced | Assessment, exams, results and reporting modules | Use one grading/assessment rules authority and existing student/class/subject IDs. Preserve moderation, publication, audit and approval boundaries. |
+| Finance / payroll | Central finance configuration and shared workflow/audit foundations; full finance ledger routes not yet evidenced | Finance, fees, invoices, payments and payroll modules | Design ledger posting, idempotency, maker-checker and reconciliation before porting writes. Do not duplicate currency or numbering settings. |
+| Communication / campus services | Shared AppDeploy storage, notification, audit and tenant-scope services where available | Messaging, publicity, library, transport, hostel and inventory modules | Use central adapters and tenant scope; no module-specific notification, storage or identity service. |
+| Audit / workflow / events | Shared AppDeploy audit, domain-event and governance helpers | Source audit logs, approvals and background consumers | Preserve event names, actor attribution, state transitions and deny semantics. Do not claim database-level immutability or transactional outbox delivery unless verified. |
+| Future PostgreSQL design | AppDeploy-owned \`database/postgresql\` SQL scaffolding only | GitHub Drizzle and Supabase migration histories | No PostgreSQL/Supabase project is live for this app. Keep SQL as future design, reconcile into one migration chain, and do not execute it without a provisioned test database and approval. |
 
-## Known incompatibilities to resolve
+## Known incompatibilities
 
-- AppDeploy currently authenticates requests using AppDeploy `requireAuth()`; GitHub server functions validate Supabase JWT claims. Both cannot remain active as independent user identity authorities after cutover.
-- AppDeploy persistence uses tenant-partitioned key-value tables. GitHub modules query Supabase tables directly through generated clients. The target must be one PostgreSQL schema behind a shared server-side repository boundary.
-- AppDeploy dynamic tenant RBAC/ABAC policies and GitHub's role enum, access-level/module lists and SQL role helpers are not equivalent. Normalize grants and preserve explicit deny and record-derived scope; do not translate to a broad static role allowlist.
-- GitHub's migration history includes both `drizzle/migrations` and `supabase/migrations`. Choose one source of truth and reconcile all SQL in order before provisioning.
-- GitHub's latest school-membership SQL includes a one-school-only backfill guard. Treat it as a bespoke historical migration, not a reusable bootstrap for an existing multi-tenant database.
-- The GitHub repository's root `.env` was tracked. Its contents were deliberately not read. Removing the current branch copy and ignoring future local environment files does not remove the blob from prior Git history.
+- GitHub server functions authenticate through Supabase middleware; the current application authenticates through AppDeploy. Only the AppDeploy identity is authoritative.
+- GitHub modules issue direct Supabase queries against source-specific tables. Live AppDeploy modules must use the AppDeploy database SDK and existing tenant partitions.
+- GitHub role enums, profile role columns, class-teacher email matching and module-level access lists do not replace AppDeploy's dynamic membership, RBAC/ABAC, explicit-deny precedence or record-level authorization.
+- The Attendance source uses class names and legacy admission IDs. AppDeploy uses stable school/class/student identifiers and tenant-scoped teaching assignments; the adapter must validate the full relationship from server-loaded records.
+- The Staff source reads staff from profiles and performs direct row deletes. AppDeploy staff employment records must be separate from login identity and use audited lifecycle transitions/soft deletion where retention requires it.
+- GitHub's Drizzle and Supabase migration histories are separate. Neither is an executed AppDeploy migration. The future AppDeploy SQL package remains the sole place to maintain the proposed PostgreSQL design until a migration authority is explicitly approved.
+- The root \`.env\` is tracked on GitHub \`main\`; PR #1 removes the current branch copy and adds ignore rules, but prior Git history remains. Privately assess whether any private credentials were present and rotate those; never copy values into the PR or logs.
+
+## Verification boundary
+
+This document records source and AppDeploy snapshot inspection. It does not prove full module parity, successful adversarial API tests, PostgreSQL execution, data migration, or production readiness. Each module must have executed integration, authorization, tenant-isolation, validation and regression evidence before it is marked complete.
