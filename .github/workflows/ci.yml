@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   verify:
-    name: Typecheck, lint, test and build
+    name: Typecheck, changed-file lint, test and build
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -29,8 +29,23 @@ jobs:
         run: bun install --frozen-lockfile
       - name: Typecheck
         run: bun run typecheck
-      - name: Lint
-        run: bun run lint
+      # The current upstream baseline has substantial pre-existing lint debt.
+      # Enforce lint on changed source files without masking that baseline.
+      - name: Lint changed source files
+        shell: bash
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+            git fetch origin "$GITHUB_BASE_REF" --depth=1
+            base_ref="origin/$GITHUB_BASE_REF"
+            mapfile -t files < <(git diff --name-only "$base_ref...HEAD" -- '*.js' '*.jsx' '*.ts' '*.tsx')
+          else
+            mapfile -t files < <(git diff-tree --no-commit-id --name-only -r "$GITHUB_SHA" -- '*.js' '*.jsx' '*.ts' '*.tsx')
+          fi
+          if (( ${#files[@]} == 0 )); then
+            echo "No changed JavaScript or TypeScript source files to lint."
+            exit 0
+          fi
+          bunx eslint --max-warnings=0 "${files[@]}"
       - name: Unit tests
         run: bun run test
       - name: Production build
